@@ -7,6 +7,22 @@ tags:
   - vibe-coding
   - workflow
   - fullstack
+keywords:
+  - vibe coding workflow from PRD to full stack
+  - contract-first API generation with Cursor
+  - Cursor OpenCode Hermes CLI split
+  - headless UI for AI coding agents
+  - shadcn versus Ant Design for codegen
+  - stop frontend backend field drift
+faqs:
+  - question: What is a practical Vibe Coding workflow from a PRD to a running app?
+    answer: Structure the PRD into entities and a task list, write constrained prompts, generate one module at a time (data model, then API, then UI), let a terminal agent create tables and boot both servers, then verify in the browser. Cursor writes, OpenCode runs, and Hermes drafts.
+  - question: How do you stop AI-generated frontend and backend code from disagreeing on fields?
+    answer: Write the API contract before either side is generated. Paths, methods, field names, types, and example payloads are the only source. Share those types, or generate the client types from the contract, and lock the response envelope, pagination, and error codes in the prompt.
+  - question: Why prefer headless components over Ant Design or Element Plus when coding with an agent?
+    answer: Packaged libraries hide their implementation in node_modules, so the model invents props and cannot restyle internals. Headless code such as shadcn/ui and Radix lives in the repo, so the model reads real source and types and can compose non-standard UI.
+  - question: How should Cursor, OpenCode, and Hermes be split?
+    answer: Hermes turns a PRD into a task list and prompt drafts. Cursor generates and edits code one module at a time. OpenCode runs migrations, installs dependencies, and starts the servers. You accept the result; you do not implement the boilerplate.
 ---
 
 This is a Vibe Coding workflow I have reused across personal projects and day-to-day development. The goal is to make AI coding tools reliable, not occasionally impressive.

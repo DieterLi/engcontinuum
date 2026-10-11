@@ -6,6 +6,15 @@ category: notes
 tags:
   - distribution
   - studio
+keywords:
+  - discovery versus owned settlement site
+  - one-person studio distribution
+  - thin owned home for trust and offers
+faqs:
+  - question: Why keep an owned site if discovery happens somewhere else?
+    answer: Host ecosystems are where operators already are, so that is where you show up. A thin owned home still has to hold the essay archive, the list, and the offer, because authority and pricing need a place that compounds under your name.
+  - question: What fails if the owned site is treated as the growth engine?
+    answer: Cold traffic rarely walks into a stranger’s domain. Months of landing-page work do not replace showing up in native posts, tools, and defaults. Deleting the owned site fails the other way, because there is nowhere for trust to settle.
 ---
 
 A polished landing page is not a growth engine. In a zero-click, link-demoted web, cold traffic rarely walks into a stranger’s domain.

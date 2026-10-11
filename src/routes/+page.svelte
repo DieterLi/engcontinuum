@@ -1,16 +1,22 @@
 <script lang="ts">
+	import Seo from '$lib/components/Seo.svelte';
+	import { collectionJsonLd } from '$lib/seo';
 	import { site } from '$lib/site';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
 </script>
 
-<svelte:head>
-	<title>{site.name} — {site.tagline}</title>
-	<meta property="og:title" content={site.name} />
-	<meta property="og:description" content={site.description} />
-	<meta property="og:url" content={site.url} />
-</svelte:head>
+<Seo
+	title="{site.name} — {site.tagline}"
+	description={site.description}
+	jsonLd={collectionJsonLd({
+		url: site.url,
+		name: site.name,
+		description: site.description,
+		posts: data.posts
+	})}
+/>
 
 <section class="hero">
 	<p class="eyebrow">Systems studio</p>

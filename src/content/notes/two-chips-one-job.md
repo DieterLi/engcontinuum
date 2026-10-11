@@ -6,6 +6,15 @@ category: notes
 tags:
   - architecture
   - devices
+keywords:
+  - low-power MCU and media SoC split
+  - battery camera always-on control plane
+  - wildlife camera power architecture
+faqs:
+  - question: Why split a low-power MCU from a media SoC on a battery camera?
+    answer: A media SoC that stays awake for control traffic burns the battery on cheap work. Keep wake, credentials, and session control on an always-on MCU, and power the media SoC only when there is something worth recording.
+  - question: What should the protocol boundary own?
+    answer: Power and boot are part of the protocol, not leftover GPIO. The MCU hands a short-lived media plane a clean boundary, then services and agents receive media and telemetry without inheriting session state.
 ---
 
 Battery products collapse when the expensive chip does cheap work all day.

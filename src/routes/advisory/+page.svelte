@@ -1,14 +1,12 @@
 <script lang="ts">
+	import Seo from '$lib/components/Seo.svelte';
 	import { site } from '$lib/site';
 </script>
 
-<svelte:head>
-	<title>Advisory — {site.name}</title>
-	<meta
-		name="description"
-		content="Selective architecture reviews and advisory for continuum systems."
-	/>
-</svelte:head>
+<Seo
+	title="Advisory"
+	description="Selective architecture reviews for device, protocol, and AI-augmented delivery across the engineering continuum."
+/>
 
 <section>
 	<p class="eyebrow">Selective</p>

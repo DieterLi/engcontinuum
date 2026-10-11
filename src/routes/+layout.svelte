@@ -4,17 +4,31 @@
 	import Header from '$lib/components/Header.svelte';
 	import Footer from '$lib/components/Footer.svelte';
 	import { site } from '$lib/site';
+	import { siteGraphJsonLd } from '$lib/seo';
 	import { page } from '$app/state';
 
 	let { children } = $props();
+
+	const canonicalHref = $derived.by(() => {
+		const path = page.url.pathname;
+		const category = page.url.searchParams.get('category');
+		if (path === '/notes' && category && category !== 'all') {
+			return `${site.url}/notes?category=${category}`;
+		}
+		const normalized = path === '/' ? '' : path.replace(/\/$/, '');
+		return `${site.url}${normalized}`;
+	});
 </script>
 
 <svelte:head>
 	<link rel="icon" href={favicon} />
-	<meta name="description" content={site.description} />
+	<link rel="canonical" href={canonicalHref} />
+	<link rel="alternate" type="text/plain" href="{site.url}/llms.txt" title="LLM guidance" />
 	<meta property="og:site_name" content={site.name} />
-	<meta property="og:type" content="website" />
-	<meta name="twitter:card" content="summary_large_image" />
+	<meta property="og:url" content={canonicalHref} />
+	<meta name="twitter:card" content="summary" />
+	<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large" />
+	{@html siteGraphJsonLd()}
 </svelte:head>
 
 <div class="site-shell">

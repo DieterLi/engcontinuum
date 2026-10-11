@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { categoryList, resolveCategory, type CategoryId } from '$lib/categories';
-	import { site } from '$lib/site';
+	import Seo from '$lib/components/Seo.svelte';
+	import { absoluteUrl, collectionJsonLd } from '$lib/seo';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -17,21 +18,55 @@
 			? data.posts
 			: data.posts.filter((post) => post.category === activeCategory)
 	);
+
+	const listing = $derived.by(() => {
+		if (activeCategory === 'practice') {
+			return {
+				title: 'Vibe Coding practice notes',
+				heading: 'Practice',
+				description:
+					'Personal Vibe Coding notes: contract-first prompts, Cursor, OpenCode, and Hermes CLI for turning a PRD into a running frontend, API, and database.',
+				lede: 'Repeatable workflows for AI-assisted delivery. Contract first, then code — from a PRD to a running frontend, API, and database.'
+			};
+		}
+		if (activeCategory === 'notes') {
+			return {
+				title: 'Architecture notes',
+				heading: 'Notes',
+				description:
+					'Architecture notes on device power boundaries, protocol ownership, and how a one-person studio keeps discovery and an owned home apart.',
+				lede: 'Decision rules for devices, protocols, and a one-person studio. Power, boundaries, and where trust actually settles.'
+			};
+		}
+		return {
+			title: 'Notes',
+			heading: 'Notes',
+			description:
+				'Engineering notes on device architecture, studio distribution, and a Vibe Coding workflow from a PRD to a running full stack.',
+			lede: 'Decision rules, bring-up scars, and architecture judgment — plus a Vibe Coding practice for turning a PRD into a running stack.'
+		};
+	});
+
+	const listingUrl = $derived(
+		activeCategory === 'all' ? absoluteUrl('/notes') : absoluteUrl(`/notes?category=${activeCategory}`)
+	);
 </script>
 
-<svelte:head>
-	<title>Notes — {site.name}</title>
-	<meta name="description" content="Engineering notes across the continuum." />
-</svelte:head>
+<Seo
+	title={listing.title}
+	description={listing.description}
+	jsonLd={collectionJsonLd({
+		url: listingUrl,
+		name: listing.title,
+		description: listing.description,
+		posts: filtered
+	})}
+/>
 
 <section>
 	<p class="eyebrow">Index</p>
-	<h1 class="display">Notes</h1>
-	<p class="lede">
-		Decision rules, bring-up scars, and architecture judgment — written for principals and builders
-		who ship across layers. Practice pieces cover Vibe Coding workflows that turn AI tools into
-		repeatable delivery.
-	</p>
+	<h1 class="display">{listing.heading}</h1>
+	<p class="lede">{listing.lede}</p>
 
 	<div class="filters" role="tablist" aria-label="Categories">
 		<a

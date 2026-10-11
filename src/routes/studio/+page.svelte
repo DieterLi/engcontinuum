@@ -1,14 +1,12 @@
 <script lang="ts">
+	import Seo from '$lib/components/Seo.svelte';
 	import { site } from '$lib/site';
+
+	const description =
+		'A one-person systems studio spanning hardware, firmware, protocols, and AI agents — with a written Vibe Coding loop for delivery.';
 </script>
 
-<svelte:head>
-	<title>Studio — {site.name}</title>
-	<meta
-		name="description"
-		content="A one-person systems studio spanning hardware to AI agents."
-	/>
-</svelte:head>
+<Seo title="Studio" {description} />
 
 <section>
 	<p class="eyebrow">Studio</p>
@@ -32,7 +30,9 @@
 			<h2>How work happens</h2>
 			<p>
 				Staged bring-up, host-testable protocols, and verification gates. AI accelerates
-				execution; architecture and acceptance criteria stay human.
+				execution; architecture and acceptance criteria stay human. The delivery loop is written
+				up as a
+				<a href="/notes/vibe-coding-rd-efficiency">Vibe Coding workflow from PRD to a running stack</a>.
 			</p>
 		</article>
 		<article class="panel card">

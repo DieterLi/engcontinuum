@@ -17,7 +17,10 @@ declare module '*.md' {
 		title: string;
 		summary: string;
 		date: string;
+		category?: string;
 		tags?: string[];
+		keywords?: string[];
+		faqs?: { question: string; answer: string }[];
 		draft?: boolean;
 	};
 
@@ -32,7 +35,10 @@ declare module '*.svx' {
 		title: string;
 		summary: string;
 		date: string;
+		category?: string;
 		tags?: string[];
+		keywords?: string[];
+		faqs?: { question: string; answer: string }[];
 		draft?: boolean;
 	};
 

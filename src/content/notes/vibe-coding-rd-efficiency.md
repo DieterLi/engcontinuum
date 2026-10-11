@@ -1,6 +1,6 @@
 ---
-title: 基于 Vibe Coding 的研发提效实践
-summary: 「一键成端」——输入 PRD，借助 AI 编程工具生成可运行全栈应用；一套可复制的个人工作流与经验总结。
+title: A Vibe Coding workflow that ships
+summary: A personal practice for turning a PRD into a running frontend, API, and database — contract first, then code.
 date: 2026-10-10
 category: practice
 tags:
@@ -9,178 +9,183 @@ tags:
   - fullstack
 ---
 
-这是一套我在个人项目与日常开发中反复验证过的 Vibe Coding 工作流：把 AI 编程工具从「偶尔好用」变成「稳定出活」。
+This is a Vibe Coding workflow I have reused across personal projects and day-to-day development. The goal is to make AI coding tools reliable, not occasionally impressive.
 
 ---
 
-## 一、一句话定义
+## 1. The idea in one line
 
-**「一键成端」**：输入产品需求文档（PRD），借助 AI 编程工具一键生成可运行的前端、后端与数据库全栈应用，实现从需求到交付的端到端自动化。
+**PRD in, stack out.** Feed in a product requirements document and have AI coding tools produce a runnable full-stack app: frontend, API, and database. The path from requirements to something you can actually run is end to end.
 
-重点不是再造一个平台，而是沉淀一套可复制的个人工作流与 Prompt 方法——先在 Demo 里跑通，再带到真实项目里持续用。
+The point is not to build another platform. It is a personal workflow and a prompt method you can repeat — prove it on a demo, then keep using it on real work.
 
 ---
 
-## 二、为什么需要这套方法
+## 2. Why this method exists
 
-### 2.1 现状痛点
+### 2.1 Where time actually goes
 
-| 环节 | 现状痛点 | 效率损耗 |
+| Stage | What goes wrong | Cost |
 | --- | --- | --- |
-| 需求理解 | 反复对齐需求，理解偏差大 | 沟通成本高 |
-| 技术设计 | 表结构设计、接口定义耗时长 | 数小时至数天 |
-| 代码编写 | 前后端重复性代码占比高（CRUD 等） | 占开发周期 60%+ |
-| 联调部署 | 环境搭建、接口联调、部署配置繁琐 | 周期长、易出错 |
-| 前后端接口 | 字段类型/命名前后端不一致，联调时大量时间耗在「对字段」上 | 联调返工频繁 |
+| Requirements | Endless alignment; the implementation drifts from the intent | High communication overhead |
+| Technical design | Schema design and API definition take too long | Hours to days |
+| Implementation | Boilerplate dominates (CRUD and the rest) | 60%+ of the cycle |
+| Integration and deploy | Environment setup, contract mismatches, and deploy config | Slow and error-prone |
+| Frontend / API boundary | Field names and types disagree; integration time is spent reconciling payloads | Constant rework |
 
-### 2.2 核心洞察
+### 2.2 What I kept seeing
 
-- 日常开发中大量工作是模式化、重复性的（建表、CRUD 接口、表单页面）
-- AI 编程工具已具备理解需求 → 生成代码 → 执行命令的能力，关键在于如何驾驭
-- 缺少的不是工具，而是一套标准化的 Prompt 与工作流方法，把工具能力稳定地转化为交付成果
-- 前后端接口不一致是 AI 生成全栈应用的最大翻车点 —— 前后端由 AI 分头生成时，字段、类型极易对不上
+- Most day-to-day work is patterned: tables, CRUD endpoints, form screens.
+- AI coding tools can already read a requirement, generate code, and run commands. The hard part is steering them.
+- The missing piece is not another tool. It is a standard prompt and a workflow that turns tool capability into something you can ship.
+- The usual failure mode in AI-generated full-stack apps is a broken contract. When frontend and backend are generated separately, field names and types diverge.
 
-因此：把「用好 AI 工具」本身方法论化，才是真正的提效点。
+The leverage is in making “use the AI well” into a method, not a mood.
 
 ---
 
-## 三、核心方法：Vibe Coding 工作流
+## 3. The workflow
 
-### 3.1 工具矩阵
+### 3.1 Tool roles
 
-| 工具 | 定位 | 在本工作流中的角色 |
+| Tool | Role | What it owns here |
 | --- | --- | --- |
-| Cursor | IDE 级 AI 编程 | 主力开发环境：代码生成、重构、多文件编辑 |
-| OpenCode | 终端 AI Agent | 无头/自动化场景：执行命令、跑脚本、批量修改 |
-| Hermes CLI | 轻量 AI 助手 | 快速问答、PRD 分析、Prompt 草稿生成 |
+| Cursor | IDE-level coding agent | Primary environment: generation, refactors, multi-file edits |
+| OpenCode | Terminal agent | Headless work: run commands, scripts, and bulk edits |
+| Hermes CLI | Lightweight assistant | Fast Q&A, PRD analysis, prompt drafts |
 
-方法核心：工具组合使用，各取所长 —— Cursor 负责「写」，OpenCode 负责「跑」，Hermes 负责「想」。
+Use each for what it is good at. Cursor writes. OpenCode runs. Hermes thinks.
 
-### 3.2 六步工作流（PRD → 全栈应用）
+### 3.2 Six steps, from PRD to a running app
 
 ```
-① PRD结构化    ② Prompt设计     ③ AI生成代码     ④ 自动联调
-   (Hermes)      (人工+Hermes)     (Cursor)        (OpenCode)
-┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐
-│ 上传/粘贴 │─▶│ 拆解为    │─▶│ 分模块    │─▶│ 执行命令  │─▶│ 浏览器/  │─▶│ 迭代优化  │
-│ PRD文档  │  │ 任务清单  │  │ 生成代码  │  │ 启动服务  │  │ 接口验证  │  │ 直至交付  │
-└──────────┘  └──────────┘  └──────────┘  └──────────┘  └──────────┘  └──────────┘
-                                                                  │
-                                                  ⑤ 验证反馈 ◀────┘
+1 Structure the PRD     2 Design prompts      3 Generate code       4 Bring it up
+   (Hermes)                (you + Hermes)        (Cursor)              (OpenCode)
++--------------+        +--------------+      +--------------+      +--------------+
+| Paste the    | -----> | Break into   | ---> | Generate one | ---> | Migrate,     |
+| PRD          |        | a task list  |      | module       |      | install, run |
++--------------+        +--------------+      +--------------+      +--------------+
+                                                                         |
+                                                                         v
+                                                              +--------------+      +--------------+
+                                                              | Browser and  | ---> | Iterate until|
+                                                              | API checks   |      | it ships     |
+                                                              +--------------+      +--------------+
+                                                                   5 Verify              6 Deliver
 ```
 
-| 步骤 | 动作 | 使用工具 | 提效要点 |
+| Step | What you do | Tool | Why it saves time |
 | --- | --- | --- | --- |
-| ① PRD 结构化 | 让 AI 提取业务实体、功能点、流程规则，输出结构化任务清单 | Hermes CLI | 避免直接让 AI 写代码，先「想清楚」 |
-| ② Prompt 设计 | 将任务清单转化为分模块、带约束的生成指令 | 人工 + Hermes | 本方法核心：好 Prompt = 好产出 |
-| ③ AI 生成代码 | 按模块生成：数据模型 → 后端 API → 前端页面 | Cursor | 分步生成、小步提交，降低 AI 跑偏 |
-| ④ 自动联调 | AI 执行建表、装依赖、启动前后端服务 | OpenCode | 把「跑起来」也交给 AI |
-| ⑤ 验证反馈 | 浏览器/接口验证，发现问题描述给 AI 修复 | Cursor + OpenCode | 人只做验收，不做实现 |
-| ⑥ 迭代交付 | 多轮「生成 → 验证 → 反馈」循环直至可用 | 全部 | 每轮循环分钟级 |
+| 1. Structure the PRD | Extract entities, features, and business rules into a task list | Hermes CLI | Do not let the model write code until the shape is clear |
+| 2. Design prompts | Turn the task list into per-module instructions with hard constraints | You + Hermes | A good prompt is the method |
+| 3. Generate code | One module at a time: data model, then API, then UI | Cursor | Small steps and small commits keep the model from drifting |
+| 4. Bring it up | Let the agent create tables, install dependencies, and start both servers | OpenCode | “Make it run” is also the agent’s job |
+| 5. Verify | Check in the browser and against the API; describe failures back to the model | Cursor + OpenCode | You accept. You do not implement |
+| 6. Iterate to done | Repeat generate → verify → feedback until it is usable | All of them | Each loop is minutes, not a day |
 
-### 3.3 前后端接口痛点与解决方法
+### 3.3 The contract problem, and the fix
 
-痛点：前端页面与后端 API 由 AI 分头生成，AI 对「接口长什么样」只能凭猜测，导致：
+When the UI and the API are generated apart, the model has to guess the shape of the interface. That shows up as:
 
-- 字段名/类型前后端不一致（如后端返回 `user_name`，前端按 `username` 取值）
-- 分页、响应包装格式（`code` / `message` / `data`）约定不统一
-- 联调阶段大量时间消耗在「对字段」上，返工频繁
+- Field names and types that do not match (`user_name` on the wire, `username` in the client)
+- Inconsistent pagination and response envelopes (`code` / `message` / `data`)
+- Integration time spent reconciling payloads, then rewriting both sides
 
-**解决方法——接口契约先行：**
+**Fix: contract first.**
 
-| 措施 | 做法 | 效果 |
+| Move | How | Effect |
 | --- | --- | --- |
-| 先定契约，再写代码 | 在第②步 Prompt 设计时，先让 AI 输出一份接口契约文档（路径、方法、请求/响应字段、类型、示例数据），前后端均以此为唯一依据 | 前后端「说同一种语言」，AI 不再猜测 |
-| 共享类型定义 | 后端数据模型/接口类型生成后，前端直接复用同一份类型文件（或基于契约自动生成前端类型），杜绝字段漂移 | 编译期即可发现不一致 |
-| 统一响应规范 | 在 Prompt 约束中固定响应包装格式、分页参数、错误码规范 | AI 按规范生成，无需联调时再协商 |
+| Contract before code | During prompt design, have the model emit an API contract: paths, methods, request and response fields, types, and example payloads. Both sides treat that document as the only source | Frontend and backend speak the same language. The model stops guessing |
+| Shared types | After the models and API types exist, the client reuses that type file, or types are generated from the contract | Drift fails at compile time |
+| One response convention | Lock the envelope, pagination params, and error codes in the prompt | The model follows the convention. You do not negotiate it during integration |
 
-核心思想：把 AI 的「猜测空间」压缩到零 —— 凡是能先约定的东西，绝不让 AI 临场发挥。
+Anything you can agree up front, agree up front. Do not leave it for the model to invent in the moment.
 
-### 3.4 关键技巧（Prompt 方法论）
+### 3.4 Prompt habits that hold up
 
-1. **先结构后代码**：永远先让 AI 输出任务拆解、表结构设计和接口契约，确认后再生成代码
-2. **分模块小步走**：一次只生成一个模块（如先 Model 再 API 再页面），避免上下文爆炸
-3. **给约束不给自由**：明确技术栈、目录结构、命名规范、响应格式，减少 AI 随意发挥
-4. **让 AI 自己跑自己验**：能用命令验证的不靠肉眼，把执行交给 OpenCode/终端
-5. **小步提交可回退**：每个可用版本及时 Git 提交，AI 跑偏时快速回滚
+1. **Structure before code.** Always get a task breakdown, a schema, and an API contract, and confirm them, before any implementation.
+2. **One module at a time.** Model, then API, then page. A single huge generation blows the context and the result.
+3. **Constraints, not freedom.** Name the stack, the directory layout, the naming rules, and the response shape. Cut the space where the model improvises.
+4. **Let the agent run and check.** If a command can verify it, do not eyeball it. Hand execution to OpenCode or the terminal.
+5. **Commit while it still works.** Each usable slice gets a git commit, so a bad generation is a rollback, not a rewrite.
 
 ---
 
-## 四、技术栈适配：为 Vibe Coding 量身定制
+## 4. Pick a stack the model can actually use
 
-实践发现：传统技术栈是为「人」设计的，AI 用起来并不顺手。为此对前后端技术栈做了针对性调整，充分释放 Vibe Coding 效能、拉高功能实现上限。
+Most stacks were designed for people. Models trip over them. I changed the frontend and backend choices so Vibe Coding stays accurate and can still reach non-standard UI.
 
-### 4.1 前端：从传统封装组件库 → Headless 组件
+### 4.1 Frontend: packaged component libraries to headless components
 
-痛点：antd、element-plus 这类传统组件库是「重封装」的——AI 必须猜测每个组件的 Props 有哪些、行为如何、样式怎么覆盖：
+Libraries like Ant Design and Element Plus are heavily wrapped. The model has to guess props, behavior, and how to override styles:
 
-| 问题 | 表现 |
+| Failure | What it looks like |
 | --- | --- |
-| 猜测 API | AI 经常编造不存在的 Props，或猜错组件行为，生成代码跑不通 |
-| 样式黑盒 | 组件内部结构封闭，想定制样式只能靠覆盖 hack，AI 改起来无从下手 |
-| 实现上限低 | 遇到非标交互，传统组件拼不出来，AI 只能「妥协实现」 |
+| Invented API | Props that do not exist, or the wrong behavior, so the page does not run |
+| Style black box | Internals are closed. Custom styling means override hacks the model cannot reason about |
+| Low ceiling | Non-standard interaction cannot be composed, so the model ships a compromise |
 
-解法：采用 Headless 组件（如 shadcn/ui / Radix UI / TanStack Headless）
+Switch to headless components (shadcn/ui, Radix, TanStack headless):
 
-| 对比维度 | 传统组件库（antd / element-plus） | Headless 组件（shadcn/ui 等） |
+| | Packaged libraries (Ant Design, Element Plus) | Headless (shadcn/ui and similar) |
 | --- | --- | --- |
-| 组件代码 | 封装在 `node_modules` 里，黑盒 | 代码直接进项目，AI 完全可见 |
-| AI 理解方式 | 凭训练记忆猜测 API | 读源码/类型精确理解 |
-| 定制能力 | 受限于暴露的 Props | 逻辑与样式解耦，灵活改造 |
-| 出错率 | 编造 Props、猜错行为 | 基于真实源码，生成即正确 |
-| 功能上限 | 组件支持啥做啥 | 可自由组合，非标交互也能实现 |
+| Where the code lives | Buried in `node_modules`, a black box | In the repo, fully visible |
+| How the model understands it | From training-data memory of the API | From the source and the types in front of it |
+| Customization | Whatever props were exposed | Logic and style are separate, so you can reshape both |
+| Error rate | Hallucinated props, wrong behavior | Grounded in the real source; it tends to compile |
+| Ceiling | You get what the library already supports | Compose freely, including non-standard interaction |
 
-收益：
+What changes in practice:
 
-- 提高功能灵活性 —— 组件代码在手，任意改造，不再被库的能力边界束缚
-- 提高功能实现质量 —— AI 基于真实源码生成，不再「瞎猜」，生成代码一次通过率显著提升
-- 提高 AI 使用效率 —— 减少「生成 → 报错 → 修 Prompt → 再生成」的无效循环，同样的需求用更少的轮次完成
+- Flexibility goes up. The component source is yours to change. You are not stuck at the library’s boundary.
+- Quality goes up. Generation is based on real source, so first-pass success is much higher.
+- Fewer wasted loops. Less generate → error → rewrite the prompt → generate again. The same feature lands in fewer turns.
 
-### 4.2 后端：契约与类型优先
+### 4.2 Backend: contract and types first
 
-| 调整项 | 做法 | 目的 |
+| Change | Practice | Why |
 | --- | --- | --- |
-| 数据模型单一来源 | 数据库 Schema / ORM 模型作为唯一事实源，API 类型由其推导 | 杜绝表结构与接口字段漂移 |
-| 接口类型共享 | 前后端共用接口类型定义，或基于契约自动生成本地类型 | 编译期暴露不一致 |
-| 规范前置 | 响应包装、分页、错误码在 Prompt 约束中固定 | 压缩 AI 猜测空间 |
+| One model source | Schema or ORM models are the source of truth; API types are derived from them | Schema and payload fields stop drifting |
+| Shared API types | Client and server share the type definitions, or the client types are generated from the contract | Mismatches show up at compile time |
+| Conventions up front | Envelope, pagination, and error codes are fixed in the prompt | Less room for the model to invent a second style |
 
-一句话：凡是能「先约定」的，绝不留给 AI「临场猜」。技术栈选择的首要标准从「人用着熟」变成「AI 用着顺」。
+If it can be specified, specify it. Do not leave it as a guess. The first question about a stack is no longer “am I fluent in it?” It is “can the model use it without inventing APIs?”
 
 ---
 
-## 五、实践成果
+## 5. What it changed in practice
 
-### 5.1 效率对比
+### 5.1 Before and after
 
-| 维度 | 传统方式 | Vibe Coding 工作流 | 提效 |
+| | By hand | This workflow | Effect |
 | --- | --- | --- | --- |
-| 简单管理系统（CRUD 后台） | 2~3 天 | 30 分钟~1 小时 | 数十倍 |
-| 表结构 + 接口设计 | 半天 | 5 分钟 | 数十倍 |
-| 前后端接口联调 | 半天~1 天（反复对字段） | 契约先行，基本零返工 | 近乎消除 |
-| 环境搭建与启动 | 2 小时 | AI 自动执行 | 近乎免手动 |
-| 人的角色 | 亲自写代码 | 只做验收与决策 | — |
+| A simple CRUD admin | 2–3 days | 30–60 minutes | Order of magnitude |
+| Schema and API design | Half a day | About 5 minutes | Order of magnitude |
+| Frontend / API integration | Half a day to a day of field-matching | Contract first; almost no rework | Mostly gone |
+| Environment and startup | About 2 hours | The agent runs it | Almost no manual setup |
+| Your job | Write the code | Accept it and make the calls | — |
 
-### 5.2 从 Demo 到真实项目
+### 5.2 From demo to real projects
 
-- 不止于 Demo：这套方法已在真实业务项目中反复使用，不是一次性玩具验证
-- 模式化代码交给 AI，人聚焦业务逻辑与验收
-- 生成代码可读、可改、可维护，能直接进入长期维护的代码库
-- 已沉淀：Prompt 模板 + 接口契约规范 + 技术栈适配清单，方便自己复用，也方便分享给同行
+- This is not a demo-only trick. I have used it repeatedly on real product work.
+- Patterned code goes to the model. I stay on business rules and acceptance.
+- The output is readable, editable, and maintainable. It can live in a long-lived codebase.
+- What stuck: prompt templates, an API contract convention, and a short stack checklist. Easy to reuse, easy to hand to someone else.
 
-### 5.3 可复用性
+### 5.3 Why it travels
 
-- **零改造成本**：不依赖自研系统，现有 AI 工具（Cursor / OpenCode / Hermes CLI）直接使用
-- **场景不挑食**：方法不绑特定业务，前后端场景均可套用
-- **可沉淀为个人规范**：契约先行 + Headless 组件 + 标准工作流，形成稳定的个人最佳实践
+- **No new platform.** Cursor, OpenCode, and Hermes CLI are enough. Nothing custom has to exist first.
+- **Not tied to one domain.** The same loop works on frontend and backend work.
+- **It becomes a personal standard.** Contract first, headless UI, and a fixed workflow beat one-off prompting.
 
 ---
 
-## 六、小结
+## 6. Takeaway
 
-「一键成端」的本质，是把 Vibe Coding 从「偶尔灵光一现」变成「可重复的个人方法」：
+The point of “PRD in, stack out” is to turn Vibe Coding from a lucky session into a method you can run again:
 
-1. **方法层**：Cursor / OpenCode / Hermes CLI 工具组合 + 六步工作流 + Prompt 方法论，实现「PRD 进、全栈应用出」
-2. **工程层**：接口契约先行，根治前后端 AI 生成「对不上」的顽疾
-3. **技术层**：技术栈为 AI 重新选型——Headless 组件破除 AI 对传统组件库的猜测，拉高功能实现上限
+1. **Method.** Cursor, OpenCode, and Hermes, plus a six-step loop and a prompt discipline, so a PRD comes out as a running stack.
+2. **Engineering.** Contract first, so separately generated frontend and backend stop disagreeing.
+3. **Stack.** Choose tools the model can read. Headless components remove the guesswork of packaged UI libraries and raise the ceiling on what you can build.
 
-对我而言，这是一套已经过真实项目验证的个人实践：AI 负责模式化产出，人负责判断与验收。
+For me this is personal practice, already exercised on real projects: the model produces the patterned work, and I keep judgment and acceptance.

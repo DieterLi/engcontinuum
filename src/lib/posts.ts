@@ -1,14 +1,17 @@
+import { resolveCategory, type CategoryId } from './categories';
+
 export type PostMeta = {
 	title: string;
 	summary: string;
 	date: string;
 	slug: string;
+	category: CategoryId;
 	tags?: string[];
 	draft?: boolean;
 };
 
 type GlobModule = {
-	metadata: Omit<PostMeta, 'slug'>;
+	metadata: Omit<PostMeta, 'slug' | 'category'> & { category?: string };
 	default: unknown;
 };
 
@@ -33,6 +36,7 @@ export function getPosts(): PostMeta[] {
 				...meta,
 				date: normalizeDate(meta.date),
 				slug: slugFromPath(path),
+				category: resolveCategory(meta.category).id,
 				tags: meta.tags ?? []
 			} satisfies PostMeta;
 		})
@@ -50,6 +54,7 @@ export function getPost(slug: string) {
 			...mod.metadata,
 			date: normalizeDate(mod.metadata.date),
 			slug: slugFromPath(path),
+			category: resolveCategory(mod.metadata.category).id,
 			tags: mod.metadata.tags ?? []
 		} satisfies PostMeta
 	};

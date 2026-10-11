@@ -2,6 +2,7 @@
 title: Two chips, one job
 summary: Why wildlife and outdoor cameras fail when a media SoC stays awake for control traffic — and how to split the continuum early.
 date: 2026-09-16
+category: notes
 tags:
   - architecture
   - devices

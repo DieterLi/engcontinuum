@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolveCategory } from '$lib/categories';
 	import { site } from '$lib/site';
 	import { getPost } from '$lib/posts';
 	import type { PageData } from './$types';
@@ -6,6 +7,7 @@
 
 	let { data }: { data: PageData } = $props();
 	const Post = $derived(getPost(data.meta.slug)?.component as Component | undefined);
+	const category = $derived(resolveCategory(data.meta.category));
 </script>
 
 <svelte:head>
@@ -16,7 +18,9 @@
 </svelte:head>
 
 <article>
-	<p class="eyebrow">Note</p>
+	<p class="eyebrow">
+		<a href={`/notes?category=${category.id}`}>{category.label}</a>
+	</p>
 	<h1 class="display">{data.meta.title}</h1>
 	<p class="meta">{data.meta.date} · {site.author}</p>
 	<p class="summary">{data.meta.summary}</p>
@@ -39,7 +43,16 @@
 	.display {
 		margin: 0.55rem 0 0.7rem;
 		font-size: clamp(2rem, 5vw, 3.1rem);
-		max-width: 16ch;
+		max-width: 28ch;
+	}
+
+	.eyebrow a {
+		text-decoration: none;
+		color: inherit;
+	}
+
+	.eyebrow a:hover {
+		color: var(--accent);
 	}
 
 	.summary {
@@ -52,6 +65,11 @@
 	.body {
 		padding-top: 0.5rem;
 		border-top: 1px solid var(--line);
+		overflow-x: auto;
+	}
+
+	:global(.body.prose) {
+		max-width: min(100%, 48rem);
 	}
 
 	.foot {

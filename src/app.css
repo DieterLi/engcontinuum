@@ -257,6 +257,41 @@ pre {
 	color: var(--ink-muted);
 }
 
+.prose table {
+	width: 100%;
+	min-width: 32rem;
+	border-collapse: collapse;
+	font-size: 0.92rem;
+	margin: 1.4rem 0;
+}
+
+.prose th,
+.prose td {
+	border: 1px solid var(--line);
+	padding: 0.55rem 0.7rem;
+	text-align: left;
+	vertical-align: top;
+}
+
+.prose th {
+	font-family: var(--font-mono);
+	font-size: 0.72rem;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	color: var(--ink-muted);
+	background: color-mix(in srgb, var(--bg-soft) 80%, transparent);
+}
+
+.prose td {
+	color: color-mix(in srgb, var(--ink) 92%, var(--ink-muted));
+}
+
+.prose hr {
+	border: 0;
+	border-top: 1px solid var(--line);
+	margin: 2.2rem 0;
+}
+
 @media (prefers-reduced-motion: reduce) {
 	*,
 	*::before,

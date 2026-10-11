@@ -2,6 +2,7 @@
 title: Discovery is not settlement
 summary: Why solo studios should fish in host ecosystems — and still keep a thin owned home for trust, list, and offers.
 date: 2026-09-19
+category: notes
 tags:
   - distribution
   - studio

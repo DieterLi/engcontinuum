@@ -6,5 +6,5 @@ export const site = {
 		'Engineering notes that join device bring-up with agent-assisted delivery: contract-first Vibe Coding, and hardware debug written from evidence.',
 	author: 'Dieter Li',
 	github: 'https://github.com/dieterli',
-	email: 'notes@engcontinuum.com'
+	email: 'popeyun@gmail.com'
 } as const;

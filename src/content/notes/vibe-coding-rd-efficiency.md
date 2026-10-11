@@ -14,6 +14,11 @@ keywords:
   - headless UI for AI coding agents
   - shadcn versus Ant Design for codegen
   - stop frontend backend field drift
+  - IoT bird recognition Go Zig C SvelteKit
+  - news deconstruction agent in Rust
+  - ontology semantic AI Java Rust
+  - UniApp SvelteKit Go mobile stack
+  - ERP monitoring Go Prometheus Grafana
 faqs:
   - question: What is a practical Vibe Coding workflow from a PRD to a running app?
     answer: Structure the PRD into entities and a task list, write constrained prompts, generate one module at a time (data model, then API, then UI), let a terminal agent create tables and boot both servers, then verify in the browser. Cursor writes, OpenCode runs, and Hermes drafts.
@@ -23,6 +28,8 @@ faqs:
     answer: Packaged libraries hide their implementation in node_modules, so the model invents props and cannot restyle internals. Headless code such as shadcn/ui and Radix lives in the repo, so the model reads real source and types and can compose non-standard UI.
   - question: How should Cursor, OpenCode, and Hermes be split?
     answer: Hermes turns a PRD into a task list and prompt drafts. Cursor generates and edits code one module at a time. OpenCode runs migrations, installs dependencies, and starts the servers. You accept the result; you do not implement the boilerplate.
+  - question: Where has this workflow been used beyond a CRUD demo?
+    answer: On production systems, not sample apps. An IoT path from device firmware to bird recognition (C, Zig, Go, SvelteKit). A Rust agent that aggregates news and takes political claims apart. An ontology and semantic-AI service in Java and Rust. A mobile product on UniApp, SvelteKit, and Go. ERP monitoring and operations on Go, Prometheus, and Grafana. The same contract-first loop applies. The stack changes with the job.
 ---
 
 This is a Vibe Coding workflow I have reused across personal projects and day-to-day development. The goal is to make AI coding tools reliable, not occasionally impressive.
@@ -188,7 +195,26 @@ If it can be specified, specify it. Do not leave it as a guess. The first questi
 - The output is readable, editable, and maintainable. It can live in a long-lived codebase.
 - What stuck: prompt templates, an API contract convention, and a short stack checklist. Easy to reuse, easy to hand to someone else.
 
-### 5.3 Why it travels
+### 5.3 Production systems, not sample apps
+
+The loop is the same. The stack follows the job. These are systems I have taken to production with this workflow. The model writes the patterned layers. I keep the boundaries, the contracts, and acceptance.
+
+| System | What it actually does | Stack | Where the workflow bites |
+| --- | --- | --- | --- |
+| IoT to bird recognition | Devices wake, capture, and ship media. A pipeline turns that into species-level recognition an operator can review. | C and Zig on the device, Go for ingest and APIs, SvelteKit for the console | Firmware, protocol frames, and the recognition API are separate contracts. The console never guesses field names. |
+| News and politics deconstruction agent | Ingest a stream of reporting, cluster it, and take a political claim apart into who said it, what it asserts, and what it leaves out. | Rust | The agent’s tool schema and the article record are fixed before generation. Rust’s types make a drifted payload fail the build. |
+| Ontology and semantic AI | A durable model of entities, relations, and meaning, with an AI layer that queries that model instead of free-text guessing. | Java for the ontology service, Rust for the query and inference path | The ontology is the contract. Java and Rust share it. Neither side invents a second set of types. |
+| Mobile product | One product surface on the phone, a web console beside it, and one API behind both. | UniApp on device, SvelteKit for the web console, Go for the API | UniApp and SvelteKit both consume the Go contract. Screen code is generated against that contract, not against a remembered payload. |
+| ERP monitoring and operations | Watch the ERP’s health, latency, and failures, and give operators a place to see and act. | Go for exporters and the ops API, Prometheus for metrics, Grafana for dashboards | Metric names, labels, and alert thresholds are specified first. Go instrumentation and Grafana panels are generated from that list, so a panel cannot reference a series that was never emitted. |
+
+A few constraints show up only at this scale:
+
+- **Device code stays small and explicit.** C and Zig are not a place to let a model wander. The prompt names the frame layout, the wake path, and what the media SoC is forbidden to do while idle.
+- **Agents get a schema, not a vibe.** The news agent and the ontology service both refuse free-form tool calls. Inputs and outputs are typed before the first implementation pass.
+- **One contract, many clients.** Mobile (UniApp), the SvelteKit console, and the Go API are one payload. If the phone and the browser disagree, the contract was skipped.
+- **Ops is a contract too.** A Prometheus metric name is an API. Write it down, then generate the Go instrumentation and the Grafana dashboard from the same list.
+
+### 5.4 Why it travels
 
 - **No new platform.** Cursor, OpenCode, and Hermes CLI are enough. Nothing custom has to exist first.
 - **Not tied to one domain.** The same loop works on frontend and backend work.

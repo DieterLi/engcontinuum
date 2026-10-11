@@ -36,6 +36,14 @@
 			</p>
 		</article>
 		<article class="panel card">
+			<h2>Code</h2>
+			<p>
+				Notes stay here. Experiments and board trees stay in
+				<a href={site.github} rel="noreferrer" target="_blank">GitHub</a>. A prompt or a probe
+				gets a repo when it is small enough to run without this site.
+			</p>
+		</article>
+		<article class="panel card">
 			<h2>What we do not do</h2>
 			<p>
 				Volume freelancing, beginner tutorial mills, or broadcasting “open to work.” Exceptional
@@ -55,7 +63,7 @@
 	.grid {
 		margin-top: 2.2rem;
 		display: grid;
-		grid-template-columns: repeat(3, minmax(0, 1fr));
+		grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
 		gap: 0.9rem;
 	}
 
@@ -76,9 +84,7 @@
 		font-size: 0.98rem;
 	}
 
-	@media (max-width: 900px) {
-		.grid {
-			grid-template-columns: 1fr;
-		}
+	.card a {
+		color: var(--accent);
 	}
 </style>

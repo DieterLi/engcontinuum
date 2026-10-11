@@ -1,32 +1,43 @@
 <script lang="ts">
 	import Seo from '$lib/components/Seo.svelte';
+	import { engagements } from '$lib/positions';
 	import { site } from '$lib/site';
+
+	const description =
+		'Two selective reviews: an AI engineering readiness review, and agentic delivery on an existing codebase. Not staffing, and not a rate card.';
 </script>
 
-<Seo
-	title="Advisory"
-	description="Selective architecture reviews for device, protocol, and AI-augmented delivery across the engineering continuum."
-/>
+<Seo title="Advisory" {description} />
 
 <section>
 	<p class="eyebrow">Selective</p>
 	<h1 class="display">Advisory</h1>
 	<p class="lede">
-		Architecture reviews and continuum guidance for founders and hardware/software leads who need
-		judgment across layers — not another pair of hands for tickets.
+		Judgment across the path from device to agent. The work is a written review with a decision in
+		it, not extra hands for a ticket queue.
 	</p>
 
-	<div class="panel box">
+	<div class="offers">
+		{#each engagements as engagement}
+			<article class="panel box">
+				<h2>{engagement.name}</h2>
+				<p>{engagement.forWhom}</p>
+				<p class="outcome">{engagement.outcome}</p>
+			</article>
+		{/each}
+	</div>
+
+	<div class="panel box inquire">
 		<h2>Good fit</h2>
 		<ul>
-			<li>Power-aware device + cloud products with messy control/media boundaries</li>
-			<li>Protocol ownership across MCU, firmware, and ingest services</li>
-			<li>AI-augmented delivery that still needs staged verification</li>
+			<li>A device product whose control plane and media plane keep getting tangled</li>
+			<li>Firmware, protocol, or service code an agent is about to rewrite without a contract</li>
+			<li>A team that wants the generation loop and still wants a human gate on acceptance</li>
 		</ul>
 		<h2>How to inquire</h2>
 		<p>
-			Send a brief note with context, constraints, and what decision you need. No rate card on
-			this page — scoping stays selective.
+			Email the constraint, the codebase shape, and the decision you need. Scope stays selective.
+			There is no public rate card.
 		</p>
 		<a class="btn btn-primary" href={`mailto:${site.email}?subject=Advisory%20inquiry`}
 			>Email {site.email}</a
@@ -40,10 +51,15 @@
 		font-size: clamp(2.2rem, 5vw, 3.4rem);
 	}
 
-	.box {
+	.offers {
 		margin-top: 2rem;
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+		gap: 0.9rem;
+	}
+
+	.box {
 		padding: 1.4rem 1.35rem 1.55rem;
-		max-width: 40rem;
 	}
 
 	.box h2 {
@@ -56,18 +72,30 @@
 		margin-top: 1.4rem;
 	}
 
+	.box p,
+	.box li {
+		color: var(--ink-muted);
+	}
+
+	.outcome {
+		margin-bottom: 0;
+	}
+
 	.box ul {
 		margin: 0;
 		padding-left: 1.1rem;
-		color: var(--ink-muted);
 	}
 
 	.box li {
 		margin: 0.35rem 0;
 	}
 
-	.box p {
-		color: var(--ink-muted);
+	.inquire {
+		margin-top: 0.9rem;
+		max-width: 40rem;
+	}
+
+	.inquire p {
 		margin: 0 0 1.1rem;
 	}
 </style>

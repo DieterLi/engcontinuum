@@ -13,6 +13,7 @@
 			<a href="/studio">Studio</a>
 			<a href="/advisory">Advisory</a>
 			<a href={site.github} rel="noreferrer" target="_blank">GitHub</a>
+			<a href="/llms.txt">llms.txt</a>
 		</div>
 	</div>
 </footer>

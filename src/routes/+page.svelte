@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Seo from '$lib/components/Seo.svelte';
+	import { positions } from '$lib/positions';
 	import { collectionJsonLd } from '$lib/seo';
 	import { site } from '$lib/site';
 	import type { PageData } from './$types';
@@ -25,8 +26,8 @@
 		<span class="headline">Judgment across the full path — board to agent.</span>
 	</h1>
 	<p class="lede">
-		Hardware, firmware, protocols, cloud services, and AI-augmented delivery — one continuum.
-		Notes for operators who price architecture, not tutorials for hire.
+		Device bring-up and agent-assisted delivery, written as evidence. Registers, flash paths, and
+		contracts — not a tour of CRUD demos.
 	</p>
 	<div class="actions">
 		<a class="btn btn-primary" href="/notes">Read the notes</a>
@@ -47,6 +48,23 @@
 		<p class="kicker">Offer</p>
 		<p class="value">Authority IP · selective reviews</p>
 	</div>
+</section>
+
+<section class="latest">
+	<div class="section-head">
+		<h2 class="display">Start here</h2>
+	</div>
+	<ul class="list">
+		{#each positions as position}
+			<li>
+				<a href={position.href}>
+					<span class="meta">Position</span>
+					<span class="title">{position.title}</span>
+					<span class="summary">{position.claim}</span>
+				</a>
+			</li>
+		{/each}
+	</ul>
 </section>
 
 <section class="latest">
@@ -127,6 +145,10 @@
 
 	.latest {
 		animation: rise 1000ms var(--ease) both;
+	}
+
+	.latest + .latest {
+		margin-top: 2.6rem;
 	}
 
 	.section-head {

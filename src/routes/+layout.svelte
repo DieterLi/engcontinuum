@@ -11,10 +11,6 @@
 
 	const canonicalHref = $derived.by(() => {
 		const path = page.url.pathname;
-		const category = page.url.searchParams.get('category');
-		if (path === '/notes' && category && category !== 'all') {
-			return `${site.url}/notes?category=${category}`;
-		}
 		const normalized = path === '/' ? '' : path.replace(/\/$/, '');
 		return `${site.url}${normalized}`;
 	});

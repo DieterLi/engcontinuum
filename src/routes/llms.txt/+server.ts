@@ -1,5 +1,5 @@
 import type { RequestHandler } from './$types';
-import { categoryList } from '$lib/categories';
+import { categoryList, categoryPath } from '$lib/categories';
 import { getPosts } from '$lib/posts';
 import { absoluteUrl } from '$lib/seo';
 import { site } from '$lib/site';
@@ -14,7 +14,7 @@ export const GET: RequestHandler = async () => {
 		`- [Notes](${absoluteUrl('/notes')}): Architecture notes and Vibe Coding practice, newest first.`,
 		...categoryList.map(
 			(category) =>
-				`- [${category.label}](${absoluteUrl(`/notes?category=${category.id}`)}): ${category.description}`
+				`- [${category.label}](${absoluteUrl(categoryPath(category.id))}): ${category.description}`
 		),
 		`- [Studio](${absoluteUrl('/studio')}): One-person systems studio from device to agent.`,
 		`- [Advisory](${absoluteUrl('/advisory')}): Selective architecture reviews. Not a staffing offer.`

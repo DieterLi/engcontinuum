@@ -1,3 +1,4 @@
+import { categoryPath } from './categories';
 import { site } from './site';
 import type { PostMeta } from './posts';
 
@@ -89,7 +90,7 @@ export function articleJsonLd(post: PostMeta): string {
 					'@type': 'ListItem',
 					position: 2,
 					name: post.category === 'practice' ? 'Practice' : 'Notes',
-					item: absoluteUrl(`/notes?category=${post.category}`)
+					item: absoluteUrl(categoryPath(post.category))
 				},
 				{ '@type': 'ListItem', position: 3, name: post.title, item: url }
 			]

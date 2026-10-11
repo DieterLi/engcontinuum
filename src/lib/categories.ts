@@ -25,3 +25,8 @@ export function resolveCategory(id?: string): Category {
 	if (id && id in categories) return categories[id as CategoryId];
 	return categories.notes;
 }
+
+export function categoryPath(id: CategoryId | 'all'): string {
+	if (id === 'all') return '/notes';
+	return `/notes/category/${id}`;
+}

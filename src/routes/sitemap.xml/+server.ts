@@ -1,5 +1,5 @@
 import type { RequestHandler } from './$types';
-import { categoryList } from '$lib/categories';
+import { categoryList, categoryPath } from '$lib/categories';
 import { getPosts } from '$lib/posts';
 import { absoluteUrl } from '$lib/seo';
 import { site } from '$lib/site';
@@ -18,7 +18,7 @@ export const GET: RequestHandler = async () => {
 		{ path: '', lastmod: newest },
 		{ path: '/notes', lastmod: newest },
 		...categoryList.map((category) => ({
-			path: `/notes?category=${category.id}`,
+			path: categoryPath(category.id),
 			lastmod: posts.find((post) => post.category === category.id)?.date ?? newest
 		})),
 		{ path: '/studio', lastmod: newest },

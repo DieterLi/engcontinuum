@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { resolveCategory } from '$lib/categories';
+	import { categoryPath, resolveCategory } from '$lib/categories';
 	import Seo from '$lib/components/Seo.svelte';
 	import { articleJsonLd } from '$lib/seo';
 	import { site } from '$lib/site';
@@ -24,7 +24,7 @@
 
 <article>
 	<p class="eyebrow">
-		<a href={`/notes?category=${category.id}`}>{category.label}</a>
+		<a href={categoryPath(category.id)}>{category.label}</a>
 	</p>
 	<h1 class="display">{data.meta.title}</h1>
 	<p class="meta">

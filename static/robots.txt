@@ -1,5 +1,7 @@
 User-agent: *
 Allow: /
+Disallow: /dashboard
+Disallow: /api/
 
 User-agent: GPTBot
 Allow: /

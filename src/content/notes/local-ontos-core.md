@@ -65,7 +65,7 @@ The fixture is deterministic. Entity ids run from 1 through 100,000. Two columns
 | --- | --- | --- | --- |
 | status | even id → `active`, else `inactive` | `status:active` | 50,000 |
 | day | id divisible by 4 → `today`, else `yesterday` | `day:today` | 25,000 |
-| both | bitwise AND of those two keys | | 25,000 |
+| both | bitwise AND of those two keys | intersection | 25,000 |
 
 Every `today` id is even, so the intersection is exactly the multiples of 4. The check requires the bitmap length and a full column scan to both equal 25,000.
 

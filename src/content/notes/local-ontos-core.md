@@ -1,299 +1,225 @@
 ---
-title: A local OntoOS core, four kernels
-summary: One Rust process holds aligned columns, a Roaring intersection, an HNSW index keyed by entity id, and a sandbox delta. The check below is 100,000 rows on this machine.
+title: OntoOS locally — ontology, prefix KV, and a sandbox walk
+summary: Why a Palantir-shaped ontology graph drops Cypher for prefix seeks and TPFRole bitmaps — and what this machine measured after the RocksDB C++ toolchain was missing.
 date: 2026-11-05
 category: notes
 tags:
   - architecture
+  - ontology
   - graph
-  - storage
 keywords:
-  - OntoOS AbutionGraph local Rust core
-  - RoaringTreemap multi-predicate intersection
-  - usearch 2.21 HNSW entity id key
-  - copy-on-write sandbox property delta
-  - graph shock propagation with a decay
+  - Palantir ontology object graph local PoC
+  - OntoOS AbutionGraph TPFRole semantic layer
+  - Ontology TPFRole HOLAP Roaring bitmap filter
+  - RocksDB prefix iterator out-edge encoding
+  - copy-on-write sandbox causal propagation agent
 faqs:
-  - question: What does the local OntoOS core keep in one process?
-    answer: Aligned attribute columns, one Roaring bitmap per predicate, an HNSW index whose key is the entity id, the adjacency list, and a per-session property delta. Axum serves that state on localhost.
-  - question: Which 64-bit bitmap type did the roaring crate export?
-    answer: roaring 0.11.5 exports RoaringTreemap for u64 ids. The filter inserts entity ids and intersects with bitwise AND. An empty predicate list, or a key that was never indexed, returns an empty bitmap.
-  - question: Which usearch version linked on this machine?
-    answer: usearch 2.21.4. Version 2.26.6 pulls numkong, and this MSVC compiler rejected that build — cl.exe ignored -std:c99, then serial.h failed with C2059. 2.21.4 links through cxx.
-  - question: What did the sandbox change, and what did the shock walk return?
-    answer: Setting status to isolated on node 12 made the session read isolated and left the base column active. The open walk reached node 13 at 0.512. With node 12 isolated, the walk recorded 0.64 on node 12 and stopped.
+  - question: How does this OntoOS PoC relate to a Palantir-style ontology?
+    answer: Objects and links share one entity-id space. TPFRole collapses ERP rows, time buckets, and spatial cells onto that space. Filters are Roaring intersections; walks are prefix scans on out-edges — not Cypher text plans.
+  - question: What is TPFRole in this stack?
+    answer: Six facets — Type, Predicate, Function, Aggregation, Action, Role — that name how a heterogeneous feed becomes bitmap keys and agent context. The local role for the check was Supplier / status:active / time:today / ops.
+  - question: Why is the durable store not RocksDB on this machine?
+    answer: rocksdb-sys needs cmake and a C++ toolchain. Neither cmake nor clang was on PATH. The PoC keeps the RocksDB key layout (v:{id}, e:out:{src}:{ty}:{dst}) on a sorted PrefixKv with the same scan contract.
+  - question: What did the sandbox shock walk and agent return?
+    answer: Open walk 1001→2002→3003→4004 ended at 0.544. Isolating plant 2002 stopped the path at 0.850. With no ONTO_LLM_API_KEY, the agent emitted a local-policy re_route_supplier JSON for replay inside the overlay.
 ---
 
-This pass stands up the local OntoOS / AbutionGraph core in one Rust process. Columns, predicate bitmaps, the HNSW index, and the graph share entity ids. A sandbox session stores only the rows it changes. The SvelteKit console, when you add it, posts to this process and draws the JSON.
+General graph databases pay for a text query language and a distributed transaction story. A local OntoOS / AbutionGraph core does not. It needs a Palantir-shaped **ontology** — objects and links with a shared id space — a way to fold ERP, time-series, and spatial feeds into that space (**TPFRole**), a CoW sandbox that forks in well under a millisecond, and a causal walk that an agent can read before anything is promoted.
 
-The measured tree is `ontopo-poc/core-engine`. `cargo run --release` loads the fixture, runs the check, and exits. `--serve` keeps the same state on `127.0.0.1:3001`.
+This note is the second pass on that core. The first pass proved columns, bitmaps, and an in-memory overlay. This pass hardens the **key layout**, the **semantic layer**, the **HTTP + SvelteKit loop**, and the **agent hook**, and records what linked on this Windows box when RocksDB’s native build could not.
+
+---
+
+## 1. Principle — replace the general graph runtime
+
+Three costs dominate a Cypher / nGQL stack in a what-if loop:
+
+1. **Parser and planner.** Every hypothetical is a string plan.
+2. **Join across stores.** ERP ids, sensor series, and GIS cells live in different systems until an expensive ETL.
+3. **Isolation for speculation.** Snapshotting a whole graph, or opening a heavyweight transaction, is the wrong unit for a one-millisecond fork.
+
+The replacement is deliberate and narrow:
+
+| General graph DB | OntoOS local core |
+| --- | --- |
+| Cypher / nGQL text | Rust calls on a KV + bitmap API |
+| Logical planner / CBO | Fixed operators: intersect → prefix walk → property eval |
+| Separate vector / GIS / TS stores | One entity id; predicates are bitmap keys |
+| DB transaction for what-if | Memory `SandboxOverlay` delta over a read-only base |
+
+**Prefix seeking instead of pointer romance.** Out-edges are encoded so a dictionary-ordered LSM (RocksDB in production) returns neighbors with a single seek:
 
 ```text
-ontopo-poc/core-engine/
-├── Cargo.toml
-└── src/
-    ├── lib.rs        # fixture + run_check
-    ├── main.rs       # Axum routes
-    ├── storage.rs    # aligned columns, mmap of the id column
-    ├── bitmap.rs     # RoaringTreemap per predicate
-    ├── vector.rs     # graph node + usearch key
-    ├── sandbox.rs    # owned property delta
-    └── causal.rs     # shock walk
+v:{id}                         → vertex JSON
+e:out:{src}:{EdgeType}:{dst}   → edge JSON { "weight": 0.85 }
 ```
 
-Toolchain on this Windows machine: rustc 1.99.1. The release build that printed the numbers below resolved these crates:
+`prefix_iterator("e:out:1001:")` is the traversal primitive. On RocksDB that is an LSM dictionary-order seek. On this machine the same bytes live in a sorted `BTreeMap` flushed to `./data/ontopo_prefix_kv.bin`, because `rocksdb-sys` would not build without cmake/clang. The caller contract does not change.
 
-| Crate | Version | Role in this pass |
+**CoW instead of copy-the-world.** A session owns `delta_properties` and `deleted_nodes`. Reads hit the delta first, then the base KV. Fork cost on this pass was measured in tenths of a microsecond for an empty overlay — the production claim is “under 1 ms”; the empty fork is far below that.
+
+**Ontology instead of schema sprawl.** Palantir’s product ontology is the commercial reference for “everything is an object or a link.” OntoOS names the local facets **TPFRole**:
+
+```text
+T Type        entity / relation kind
+P Predicate   filter assertion (status:active, …)
+F Function    attribute / computed mapping
+Agg           time bucket / metric rollup
+Action        event response the agent may emit
+Role          ACL / ownership tag
+```
+
+Relational rows, time windows, and Geohash / H3 cells all emit **bitmap keys** under those facets. The only shared currency before the walk is the entity id.
+
+```text
+ERP row ──► type: / status: / role: ──┐
+time bucket ──► time:… / metric:…:hot ─┼─► Roaring AND ─► id set ─► prefix walk
+geohash/H3 ──► geohash:… / spatial:… ─┘
+```
+
+**Agent loop.** Shocked nodes (impact ≥ 0.05) become a compressed ontology slice. The agent returns a tool call. The call is meant to replay inside the overlay before promote. Live LLM is optional (`ONTO_LLM_API_KEY`); without it a deterministic local policy still closes the loop.
+
+---
+
+## 2. Architecture — monorepo shape
+
+```text
+ontopo-poc/
+├── backend/                 # Rust core (this pass)
+│   ├── Cargo.toml
+│   └── src/
+│       ├── main.rs          # Axum on 127.0.0.1:18080
+│       ├── storage.rs       # PrefixKv — RocksDB key layout
+│       ├── index.rs         # RoaringTreemap HOLAP
+│       ├── ontology.rs      # TPFRole + heterogeneous ingest
+│       ├── sandbox.rs       # CoW overlay
+│       ├── causal.rs        # Rayon frontier walk
+│       └── agent.rs         # local policy / OpenAI-compatible LLM
+└── frontend/                # SvelteKit sandbox console
+    └── src/routes/+page.svelte
+```
+
+Resolved crates on rustc 1.99.1 (Windows):
+
+| Crate | Version | Role |
 | --- | --- | --- |
-| roaring | 0.11.5 | `RoaringTreemap`, u64 entity ids |
-| usearch | 2.21.4 | HNSW, cosine, f32, key = entity id |
-| memmap2 | 0.9.12 | map the packed id column |
-| axum | 0.8.9 | the four local routes |
-| tokio | 1.54.1 | runtime |
+| roaring | 0.11.5 | `RoaringTreemap` for u64 ids |
+| rayon | 1.10 | parallel frontier expansion |
+| axum | 0.8.9 | HTTP API |
+| tower-http | 0.6 | CORS for the console |
+| reqwest | 0.12 | optional LLM |
+| bincode | 1.3 | PrefixKv snapshot |
 
-`usearch` 2.26.6 is the current crates.io release and it did not link here. Its build compiles `numkong`. `cl.exe` ignored `-std:c99`, then `include/numkong/cast/serial.h` failed with C2059. Pinning `usearch = "=2.21.4"` dropped `numkong` and compiled through `cxx`. The Rust calls below are that version: `Index::new`, `reserve`, `add(key, vector)`, `search`.
+`roaring` still has **no** `Roaring64Bitmap` root export — the u64 type is `RoaringTreemap`. Blueprint snippets that name `Roaring64Bitmap` need that rename on 0.11.
 
-Attribute columns in this pass are aligned `Vec<String>`. The id column is the file that gets mapped. A Parquet writer can sit on the same row alignment once the columns stop moving. Arrow is not a dependency of this binary.
-
----
-
-## 1. Columns, then the intersection
-
-The fixture is deterministic. Entity ids run from 1 through 100,000. Two columns, written at insert, and two bitmaps keyed `column:value`:
-
-| Column | Rule | Bitmap | Ids |
-| --- | --- | --- | --- |
-| status | even id → `active`, else `inactive` | `status:active` | 50,000 |
-| day | id divisible by 4 → `today`, else `yesterday` | `day:today` | 25,000 |
-| both | bitwise AND of those two keys | intersection | 25,000 |
-
-Every `today` id is even, so the intersection is exactly the multiples of 4. The check requires the bitmap length and a full column scan to both equal 25,000.
-
-```rust
-use roaring::RoaringTreemap;
-use std::collections::HashMap;
-
-pub struct IndexManager {
-    bitmaps: HashMap<String, RoaringTreemap>,
-}
-
-impl IndexManager {
-    pub fn add_index(&mut self, key: &str, id: u64) {
-        self.bitmaps.entry(key.to_string()).or_default().insert(id);
-    }
-
-    pub fn intersect_query(&self, keys: &[&str]) -> RoaringTreemap {
-        let mut keys = keys.iter();
-        let Some(first_key) = keys.next() else {
-            return RoaringTreemap::new();
-        };
-        let Some(first) = self.bitmaps.get(*first_key) else {
-            return RoaringTreemap::new();
-        };
-        let mut result = first.clone();
-        for key in keys {
-            match self.bitmaps.get(*key) {
-                Some(bitmap) => result &= bitmap,
-                None => return RoaringTreemap::new(),
-            }
-        }
-        result
-    }
-}
-```
-
-An empty key list returns an empty bitmap. A key that was never inserted returns an empty bitmap. The AND only runs across keys that exist.
-
-The id column is then written as a packed native-endian `[u64]` and mapped back with `memmap2`. The check compares the mapped slice to the in-memory ids: 800,000 bytes, 100,000 ids, equal.
-
-Timing is a batch mean in the release binary, with `std::hint::black_box` on the returned count. One thousand intersections took 1.06 µs each. Fifty full scans of the two string columns took 142.91 µs each. Same machine, same 25,000 hits. The single HTTP call later in this note is a different measurement.
+Production path for storage remains RocksDB (`e:out:…` keys, `prefix_iterator`). This pass documents the gap instead of pretending the C++ crate linked.
 
 ---
 
-## 2. The HNSW key is the entity id
+## 3. Practice — what ran on this machine
 
-`GraphNode` holds identity, a type, and outgoing edges. The vector lives in the HNSW index under that same id. A search result is already an entity id, so the column store can resolve it with the row map it already has.
+### 3.1 Fixture
 
-```rust
-pub struct GraphNode {
-    pub id: u64,
-    pub type_id: u32,
-    pub outgoing: Vec<u64>,
-}
-```
-
-```rust
-let mut options = IndexOptions::default();
-options.dimensions = dimensions;
-options.metric = MetricKind::Cos;
-options.quantization = ScalarKind::F32;
-let index = Index::new(&options)?;
-index.reserve(capacity)?;
-index.add(entity_id, vector)?;
-let matches = index.search(vector, k)?;
-// matches.keys are entity ids
-```
-
-The local index is 16 dimensions and the first 1,000 entity ids. `reserve` is called with that capacity. A 768-d index is the same `add(entity_id, vector)` call with a longer slice. This pass did not allocate 100,000 vectors of 768 floats.
-
-Searching the vector stored for id 42 returned keys `[42, 781, 412]`. The first key is the node. Graph node 10 is type 1 with outgoing `[11]`. The chain used by the walk is `10 → 11 → 12 → 13`. The other rows are column entities with no adjacency record.
-
----
-
-## 3. The session owns the delta
-
-A borrowed overlay is enough for one function call. A fork has to outlive the request that created it, so the session owns the delta and borrows the base columns only while answering a read.
-
-```rust
-pub struct SandboxDelta {
-    delta_properties: HashMap<u64, HashMap<String, String>>,
-    deleted_nodes: HashSet<u64>,
-}
-
-impl SandboxDelta {
-    pub fn set_property(&mut self, id: u64, key: &str, value: &str) {
-        self.delta_properties
-            .entry(id)
-            .or_default()
-            .insert(key.to_string(), value.to_string());
-    }
-
-    pub fn get_property(&self, columns: &ColumnStore, id: u64, key: &str) -> Option<String> {
-        if self.deleted_nodes.contains(&id) {
-            return None;
-        }
-        if let Some(props) = self.delta_properties.get(&id) {
-            if let Some(value) = props.get(key) {
-                return Some(value.clone());
-            }
-        }
-        columns.get(id, key).map(str::to_string)
-    }
-}
-```
-
-On this fixture, entity 12 is `active` in the base column (12 is even). The session sets `status` to `isolated`. The overlay read returns `isolated`. The base read after that write is still `active`. Deleting entity 99 hides it from the session; `columns.get(99, "status")` still returns the base value.
-
-Edge lists stay on the base graph. This delta covers property writes and tombstones.
-
----
-
-## 4. The shock walk
-
-`simulate_propagation` records the shock on the start node, then replaces the frontier each round. Decay is `0.8`. A propagated value under `0.01` is dropped. Impacts accumulate on every node that received a shock, so the map is the path, and the start node keeps the unscaled initial shock.
-
-A node whose sandbox `status` is `isolated` keeps the impact that already arrived and forwards nothing. Deleted nodes are skipped. Outgoing edges are read from the base graph.
-
-```rust
-const DECAY: f64 = 0.8;
-const THRESHOLD: f64 = 0.01;
-
-for _round in 0..max_rounds {
-    let mut next = HashMap::new();
-    for (&node_id, &impact) in &frontier {
-        if impact < THRESHOLD {
-            continue;
-        }
-        if sandbox.get_property(columns, node_id, "status").as_deref() == Some("isolated") {
-            continue;
-        }
-        for &neighbor in graph.outgoing(node_id) {
-            if sandbox.is_deleted(neighbor) {
-                continue;
-            }
-            let propagated = impact * DECAY;
-            if propagated < THRESHOLD {
-                continue;
-            }
-            *next.entry(neighbor).or_insert(0.0) += propagated;
-        }
-    }
-    if next.is_empty() {
-        break;
-    }
-    for (&node_id, &shock) in &next {
-        *impacts.entry(node_id).or_insert(0.0) += shock;
-    }
-    frontier = next;
-}
-```
-
-From node 10 with shock `1.0` and 8 rounds, the open session printed:
+Supply chain spine in the prefix KV:
 
 ```text
-10:1.000 11:0.800 12:0.640 13:0.512
+1001 Factory A  --SUPPLIES/0.85--> 2002 Plant B
+2002            --FEEDS/0.8------> 3003 DC C
+3003            --SERVES/0.8-----> 4004 Cust D
 ```
 
-That is `1`, then `0.8`, `0.8²`, `0.8³` along `10 → 11 → 12 → 13`. With node 12 isolated inside the session, the same call printed:
+HOLAP volume: ids `1..=10000` tagged so `status:active ∩ time:today ∩ geohash:wx4g` is every `id % 8 == 0`, plus the four spine ids that the TPFRole ingest also stamps → **1254** hits.
+
+### 3.2 Self-check (`cargo run --release -- --check`)
 
 ```text
-10:1.000 11:0.800 12:0.640
+kv_entries 7
+tpfrole_keys type:Supplier,status:active,time:today,role:ops,fn:name
+holap status∩time∩geohash = 1254
+bitmap mean 5.20 µs over 1000 intersections
+prefix e:out:1001: mean 0.24 µs over 1000 scans (1 edge)
+sandbox fork 0.300 µs
+sandbox base status[2002]=active overlay=isolated
+propagate open 1001:1.000 2002:0.850 3003:0.680 4004:0.544
+propagate isolated-2002 1001:1.000 2002:0.850
 ```
 
-Node 12 is in the map. Node 13 is absent. The base status of 12 is still `active`.
+Open path: `1 × 0.85 × 0.8 × 0.8 = 0.544` at customer 4004. With plant 2002 isolated in the overlay, the walk records 0.850 on 2002 and does not reach 3003 / 4004. The base vertex JSON for 2002 stays `active`.
 
----
+### 3.3 Index and overlay (abridged)
 
-## 5. The check, then the same facts over HTTP
-
-```bash
-cargo run --release
+```rust
+pub fn intersect_query(&self, keys: &[&str]) -> RoaringTreemap {
+    // empty list → empty; missing key → empty; else successive &=
+}
 ```
 
-```text
-entities 100000
-bitmap status:active ∩ day:today = 25000
-bitmap mean 1.06 µs over 1000 intersections
-scan mean 142.91 µs over 50 full passes
-mmap id column 800000 bytes, 100000 ids match
-hnsw dim 16, indexed 1000, nearest [42, 781, 412]
-graph node 10 type 1 outgoing [11]
-sandbox base status[12]=active overlay status[12]=isolated
-propagate open 10:1.000 11:0.800 12:0.640 13:0.512
-propagate isolated-12 10:1.000 11:0.800 12:0.640
+```rust
+pub fn get_property(&self, storage: &PrefixKv, node_id: u64, key: &str) -> Option<String> {
+    if self.deleted_nodes.contains(&node_id) { return None; }
+    if let Some(val) = self.delta_properties.get(&node_id).and_then(|p| p.get(key)) {
+        return Some(val.clone());
+    }
+    // else parse v:{id} JSON from PrefixKv
+}
 ```
 
-The process exits after that print. The server is the same binary:
-
-```bash
-cargo run --release -- --serve
+```rust
+// causal frontier — Rayon over current impacts; edges via scan_by_prefix
+let prefix = format!("e:out:{node_id}:");
+let edges = storage.scan_by_prefix(&prefix);
 ```
 
-It binds `127.0.0.1:3001` after the check passes. Four routes, all `POST`:
+### 3.4 HTTP surface
 
-| Route | Body | What it returns |
-| --- | --- | --- |
-| `/query` | `{"keys":["status:active","day:today"]}` | hit count, one-call microseconds, first ids |
-| `/sandbox/fork` | `{}` | `{session}` |
-| `/sandbox/{session}/property` | `{"id":12,"key":"status","value":"isolated"}` | overlay value and base value |
-| `/sandbox/{session}/propagate` | `{"start":10,"shock":1.0,"rounds":8}` | impact list for that session |
+`cargo run --release` binds `http://127.0.0.1:18080` after the check (8080 was already taken on this host by another process).
 
-```bash
-curl -s -X POST http://127.0.0.1:3001/query \
-  -H 'content-type: application/json' \
-  -d '{"keys":["status:active","day:today"]}'
+| Route | Purpose |
+| --- | --- |
+| `GET /health` | liveness |
+| `POST /api/query` | HOLAP intersect |
+| `POST /api/sandbox/fork` | empty CoW session |
+| `POST /api/sandbox/{session}/property` | overlay write + base readback |
+| `POST /api/sandbox/simulate` | walk ± agent |
 
-curl -s -X POST http://127.0.0.1:3001/sandbox/fork \
-  -H 'content-type: application/json' -d '{}'
-
-curl -s -X POST http://127.0.0.1:3001/sandbox/1/property \
-  -H 'content-type: application/json' \
-  -d '{"id":12,"key":"status","value":"isolated"}'
-
-curl -s -X POST http://127.0.0.1:3001/sandbox/1/propagate \
-  -H 'content-type: application/json' \
-  -d '{"start":10,"shock":1.0,"rounds":8}'
-```
-
-Responses from this run:
+Simulate body:
 
 ```json
-{"count":25000,"micros":9.3,"ids":[4,8,12,16,20,24,28,32]}
-{"session":1}
-{"overlay":"isolated","base":"active"}
-{"impacts":[{"id":10,"impact":1.0},{"id":11,"impact":0.8},{"id":12,"impact":0.6400000000000001}]}
+{
+  "start_node_id": 1001,
+  "shock_value": 1.0,
+  "enable_agent": true,
+  "session": 1
+}
 ```
 
-The handler's `9.3` µs is one intersection inside that request. The `1.06` µs figure is the mean of a thousand calls in-process. Both counts are 25,000. The sample ids start at 4 because ids start at 1 and the hit set is multiples of 4. `0.6400000000000001` is `0.8 × 0.8` in `f64`; the in-process printer rounds it to `0.640`.
+Without `ONTO_LLM_API_KEY`, `agent_recommendation.source` is `local-policy` and `content` is a JSON tool call (`re_route_supplier`, target = top shocked id). With the key set, `agent.rs` posts to an OpenAI-compatible `/chat/completions` and returns the model text. Either path is meant to be **replayed in the overlay** before promote — the PoC stops at emitting the recommendation.
 
-A SvelteKit console for this core is a client of those four calls. It draws the count, the sample ids, the overlay beside the base value, and the impact list. The entity table stays in the Rust process. This pass stops at the curl output above.
+HTTP from this run (session 1 isolates plant 2002, then a second call walks the open base):
+
+```json
+{"count":1254,"ids":[8,16,24,32,40,48,56,64,72,80,88,96]}
+{"session":1,"fork_us":0.2}
+{"overlay":"isolated","base":"active"}
+{"impacts":[{"id":1001,"impact":1.0},{"id":2002,"impact":0.85}],"agent_recommendation":{"source":"local-policy","content":"{\"action\":\"re_route_supplier\",\"target\":1001,\"qty\":500, ...}"}}
+{"impacts":[{"id":1001,"impact":1.0},{"id":2002,"impact":0.85},{"id":3003,"impact":0.68},{"id":4004,"impact":0.544}], ...}
+```
+
+### 3.5 SvelteKit console
+
+```bash
+cd frontend && npm install && npm run dev
+```
+
+The page posts to the four routes: HOLAP sample, optional isolate of plant 2002, shock walk, agent panel. It is a thin client over the Rust process — the ontology and the walk stay in-process.
+
+---
+
+## 4. What this pass is not
+
+- Not a Cypher engine and not a multi-region ACID graph.
+- Not a linked `rocksdb` crate on this laptop — key layout only, until cmake/clang are present.
+- Not a full Palantir Foundry substitute. The word **ontology** here means the object/link id space and TPFRole facets, not a commercial platform claim.
+- Not automatic promote-to-production. The agent suggestion is advice inside the sandbox.
+
+The durable next step is the same API over a real RocksDB open, then richer Action replay (apply tool call → second walk → diff). The numbers above are the acceptance gate for this local build.

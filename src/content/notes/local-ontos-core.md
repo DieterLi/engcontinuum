@@ -8,11 +8,13 @@ tags:
   - ontology
   - graph
 keywords:
-  - Palantir ontology object graph local PoC
+  - Palantir ontology for agentic AI
+  - enterprise ontology object graph
+  - knowledge graph causal what-if sandbox
   - OntoOS AbutionGraph TPFRole semantic layer
   - Ontology TPFRole HOLAP Roaring bitmap filter
   - RocksDB Docker Compose prefix iterator
-  - RocksDB prefix iterator out-edge encoding
+  - agentic workflow ontology decision loop
   - copy-on-write sandbox causal propagation agent
 faqs:
   - question: How does this OntoOS PoC relate to a Palantir-style ontology?

@@ -9,15 +9,14 @@ tags:
   - fullstack
 keywords:
   - vibe coding workflow from PRD to full stack
+  - agentic software delivery contract first
+  - AI coding agents Cursor OpenCode Hermes
   - contract-first API generation with Cursor
-  - Cursor OpenCode Hermes CLI split
   - headless UI for AI coding agents
-  - shadcn versus Ant Design for codegen
-  - stop frontend backend field drift
-  - IoT bird recognition Go Zig C SvelteKit
-  - news deconstruction agent in Rust
+  - stop AI frontend backend field drift
+  - Claude Code versus Cursor agent workflow
   - ontology semantic AI Java Rust
-  - UniApp SvelteKit Go mobile stack
+  - IoT bird recognition Go Zig C SvelteKit
   - ERP monitoring Go Prometheus Grafana
 faqs:
   - question: What is a practical Vibe Coding workflow from a PRD to a running app?

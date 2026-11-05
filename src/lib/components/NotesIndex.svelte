@@ -21,28 +21,28 @@
 	const listing = $derived.by(() => {
 		if (activeCategory === 'practice') {
 			return {
-				title: 'Vibe Coding practice notes',
+				title: 'Vibe coding & AI coding-agent practice',
 				heading: 'Practice',
 				description:
-					'Personal Vibe Coding notes: contract-first prompts, Cursor, OpenCode, and Hermes CLI for turning a PRD into a running frontend, API, and database.',
-				lede: 'Repeatable workflows for AI-assisted delivery. Contract first, then code — from a PRD to a running frontend, API, and database.'
+					'Contract-first vibe coding with Cursor, OpenCode, and Hermes — agentic delivery from a PRD to a running frontend, API, and database, including hardware bring-up.',
+				lede: 'Repeatable agentic workflows. Contract first, then code — from a PRD to a running stack.'
 			};
 		}
 		if (activeCategory === 'notes') {
 			return {
-				title: 'Architecture notes',
+				title: 'Edge AI, ontology, and continuum architecture',
 				heading: 'Notes',
 				description:
-					'Architecture notes on device power boundaries, protocol ownership, and how a one-person studio keeps discovery and an owned home apart.',
-				lede: 'Decision rules for devices, protocols, and a one-person studio. Power, boundaries, and where trust actually settles.'
+					'Architecture notes on edge AI power splits, Palantir-style ontology graphs, and GEO settlement — device to agentic AI.',
+				lede: 'Decision rules for devices, ontology graphs, and a studio that stays citable by generative engines.'
 			};
 		}
 		return {
-			title: 'Notes',
+			title: 'Notes — agentic AI, ontology, vibe coding',
 			heading: 'Notes',
 			description:
-				'Engineering notes on device architecture, studio distribution, and a Vibe Coding workflow from a PRD to a running full stack.',
-			lede: 'Decision rules, bring-up scars, and architecture judgment — plus a Vibe Coding practice for turning a PRD into a running stack.'
+				'Field notes on agentic AI at the edge, enterprise ontology graphs, and vibe coding workflows — evidence for generative engine citations.',
+			lede: 'Decision rules, bring-up scars, and architecture judgment — plus vibe coding practice that ships.'
 		};
 	});
 

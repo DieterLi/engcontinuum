@@ -8,6 +8,8 @@ tags:
   - devices
   - bring-up
 keywords:
+  - vibe coding hardware bring-up
+  - AI coding agents embedded flash debug
   - Ingenic T23 SFC flash program failure
   - USB cloner PERM ERR stage2_write
   - jz_sfc status register ioctl

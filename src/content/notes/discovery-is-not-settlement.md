@@ -7,9 +7,11 @@ tags:
   - distribution
   - studio
 keywords:
+  - generative engine optimization GEO settlement
+  - AI visibility and LLM citation map
   - discovery versus owned settlement site
+  - llms.txt for solo studio GEO
   - one-person studio distribution
-  - thin owned home for trust and offers
 faqs:
   - question: Why keep an owned site if discovery happens somewhere else?
     answer: Host ecosystems are where operators already are, so that is where you show up. A thin owned home still has to hold the essay archive, the list, and the offer, because authority and pricing need a place that compounds under your name.

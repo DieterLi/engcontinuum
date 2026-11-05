@@ -10,12 +10,14 @@ export const categories: Record<CategoryId, Category> = {
 	notes: {
 		id: 'notes',
 		label: 'Notes',
-		description: 'Architecture judgment across the continuum.'
+		description:
+			'Architecture judgment across the continuum: edge AI, Palantir-style ontology graphs, MCU/SoC power splits, and device-to-agent boundaries.'
 	},
 	practice: {
 		id: 'practice',
 		label: 'Practice',
-		description: 'Vibe Coding workflows and AI-assisted delivery leverage.'
+		description:
+			'Vibe coding and AI coding-agent workflows — contract-first delivery from a PRD to a running stack, including hardware bring-up loops.'
 	}
 } as const;
 

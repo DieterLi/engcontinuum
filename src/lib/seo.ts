@@ -1,6 +1,8 @@
 import { categoryPath } from './categories';
+import { useCases } from './offers';
 import { site } from './site';
 import type { PostMeta } from './posts';
+import { primaryKeywords, topicClusters } from './topics';
 
 export function absoluteUrl(path: string): string {
 	if (path.startsWith('http')) return path;
@@ -13,6 +15,10 @@ export function jsonLd(data: unknown): string {
 }
 
 export function siteGraphJsonLd(): string {
+	const knowsAbout = topicClusters.flatMap((cluster) =>
+		cluster.phrases.map((name) => ({ '@type': 'Thing', name }))
+	);
+
 	return jsonLd({
 		'@context': 'https://schema.org',
 		'@graph': [
@@ -21,9 +27,16 @@ export function siteGraphJsonLd(): string {
 				'@id': `${site.url}/#website`,
 				url: site.url,
 				name: site.name,
+				alternateName: ['Eng Continuum', 'EngContinuum assurance studio'],
 				description: site.description,
 				inLanguage: 'en',
-				publisher: { '@id': `${site.url}/#person` }
+				keywords: primaryKeywords.join(', '),
+				publisher: { '@id': `${site.url}/#person` },
+				about: knowsAbout,
+				speakable: {
+					'@type': 'SpeakableSpecification',
+					cssSelector: ['.lede', '.summary', '.faqs']
+				}
 			},
 			{
 				'@type': 'Person',
@@ -31,9 +44,52 @@ export function siteGraphJsonLd(): string {
 				name: site.author,
 				url: `${site.url}/studio`,
 				email: site.email,
+				jobTitle: 'Assurance architect — device to agentic AI',
+				knowsAbout: primaryKeywords,
+				sameAs: [site.github]
+			},
+			{
+				'@type': 'Organization',
+				'@id': `${site.url}/#organization`,
+				name: site.name,
+				url: site.url,
+				description: site.description,
+				founder: { '@id': `${site.url}/#person` },
+				knowsAbout: primaryKeywords,
 				sameAs: [site.github]
 			}
 		]
+	});
+}
+
+export function offerJsonLd(): string {
+	return jsonLd({
+		'@context': 'https://schema.org',
+		'@type': 'ProfessionalService',
+		'@id': `${site.url}/#service`,
+		name: site.name,
+		url: site.url,
+		description: site.description,
+		email: site.email,
+		provider: { '@id': `${site.url}/#person` },
+		areaServed: 'Worldwide',
+		serviceType: [
+			'Closed-source edge Agent SDK',
+			'Agentic AI architecture audit',
+			'Ontology / continuum readiness review'
+		],
+		knowsAbout: primaryKeywords,
+		hasOfferCatalog: {
+			'@type': 'OfferCatalog',
+			name: 'Use cases',
+			itemListElement: useCases.map((item, index) => ({
+				'@type': 'Offer',
+				name: `Case ${item.code}: ${item.title}`,
+				description: `${item.metric}. ${item.metricNote}. ${item.detail}`,
+				url: item.source ? absoluteUrl(item.source) : `${site.url}/#${item.id}`,
+				position: index + 1
+			}))
+		}
 	});
 }
 

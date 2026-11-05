@@ -4,18 +4,36 @@
 	import { site } from '$lib/site';
 
 	const description =
-		'Two selective reviews: an AI engineering readiness review, and agentic delivery on an existing codebase. Not staffing, and not a rate card.';
+		'Closed-source edge Agent SDKs, agentic AI architecture audits, and ontology-ready delivery plans for hardware-to-LLM teams. Selective. No public rate card.';
+	const keywords = [
+		'edge Agent SDK',
+		'agentic AI architecture audit',
+		'closed-source agent runtime',
+		'ontology readiness review',
+		'device to agent continuum'
+	];
 </script>
 
-<Seo title="Advisory" {description} />
+<Seo title="Advisory — closed SDK & agentic AI audit" {description} {keywords} />
 
 <section>
-	<p class="eyebrow">Selective</p>
-	<h1 class="display">Advisory</h1>
+	<p class="eyebrow">Commercial</p>
+	<h1 class="display">Closed SDK · architecture audit</h1>
 	<p class="lede">
-		Judgment across the path from device to agent. The work is a written review with a decision in
-		it, not extra hands for a ticket queue.
+		If you already understand the continuum and want the capability inside a shipping product, this
+		is the door. Public notes stay evidence. Your binary stays closed.
 	</p>
+
+	<div class="cta-bar panel">
+		<div>
+			<p class="cta-kicker">Same-night black box when scoped</p>
+			<p class="cta-copy">
+				Tell us the interface, the silicon budget, and the decision you need. A compiled drop can
+				follow the same day the contract freezes.
+			</p>
+		</div>
+		<a class="btn btn-primary" href={site.engageMailto}>Book closed SDK / audit</a>
+	</div>
 
 	<div class="offers">
 		{#each engagements as engagement}
@@ -27,21 +45,19 @@
 		{/each}
 	</div>
 
-	<div class="panel box inquire">
+	<div id="engage" class="panel box inquire">
 		<h2>Good fit</h2>
 		<ul>
-			<li>A device product whose control plane and media plane keep getting tangled</li>
-			<li>Firmware, protocol, or service code an agent is about to rewrite without a contract</li>
-			<li>A team that wants the generation loop and still wants a human gate on acceptance</li>
+			<li>Serial / Modbus / proprietary field buses that must speak to an LLM Agent without a rewrite</li>
+			<li>MCU or Linux edge boxes that need a slim, closed Agent runtime — not another open license surface</li>
+			<li>Teams that want generation speed and still need a human gate on acceptance</li>
 		</ul>
 		<h2>How to inquire</h2>
 		<p>
-			Email the constraint, the codebase shape, and the decision you need. Scope stays selective.
-			There is no public rate card.
+			Email the constraint, the hardware or codebase shape, and the decision you need this week.
+			Scope stays selective. There is no public rate card.
 		</p>
-		<a class="btn btn-primary" href={`mailto:${site.email}?subject=Advisory%20inquiry`}
-			>Email {site.email}</a
-		>
+		<a class="btn btn-primary" href={site.engageMailto}>Email {site.email}</a>
 	</div>
 </section>
 
@@ -49,10 +65,40 @@
 	.display {
 		margin: 0.7rem 0 0.85rem;
 		font-size: clamp(2.2rem, 5vw, 3.4rem);
+		max-width: 16ch;
+	}
+
+	.cta-bar {
+		margin-top: 1.75rem;
+		padding: 1.35rem 1.4rem;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 1.25rem;
+		flex-wrap: wrap;
+		border-color: color-mix(in srgb, var(--accent) 35%, var(--line));
+		background:
+			linear-gradient(135deg, var(--accent-soft), transparent 60%),
+			color-mix(in srgb, var(--bg-elevated) 88%, transparent);
+	}
+
+	.cta-kicker {
+		margin: 0;
+		font-family: var(--font-display);
+		font-weight: 700;
+		letter-spacing: -0.02em;
+		font-size: 1.1rem;
+	}
+
+	.cta-copy {
+		margin: 0.4rem 0 0;
+		color: var(--ink-muted);
+		max-width: 36rem;
+		font-size: 0.95rem;
 	}
 
 	.offers {
-		margin-top: 2rem;
+		margin-top: 1.1rem;
 		display: grid;
 		grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
 		gap: 0.9rem;
@@ -92,7 +138,7 @@
 
 	.inquire {
 		margin-top: 0.9rem;
-		max-width: 40rem;
+		max-width: 42rem;
 	}
 
 	.inquire p {

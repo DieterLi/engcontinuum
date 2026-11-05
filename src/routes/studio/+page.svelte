@@ -3,27 +3,34 @@
 	import { site } from '$lib/site';
 
 	const description =
-		'A one-person systems studio spanning hardware, firmware, protocols, and AI agents — with a written Vibe Coding loop for delivery.';
+		'A one-person assurance studio for agentic AI from hardware to agent loops — closed edge SDKs and architecture audits in front, ontology and vibe-coding field notes as GEO evidence behind.';
+	const keywords = [
+		'agentic AI studio',
+		'edge AI assurance',
+		'vibe coding practice',
+		'ontology field notes',
+		'device to agent continuum'
+	];
 </script>
 
-<Seo title="Studio" {description} />
+<Seo title="Studio — device to agentic AI" {description} {keywords} />
 
 <section>
 	<p class="eyebrow">Studio</p>
-	<h1 class="display">A practice across the continuum</h1>
+	<h1 class="display">Assurance across the continuum</h1>
 	<p class="lede">
-		EngContinuum is the public workshop of {site.author}: end-to-end systems judgment from device
-		and firmware through protocols, services, and agent loops — operated as a one-person studio
-		with AI leverage.
+		EngContinuum is the practice of {site.author}: end-to-end judgment from device and firmware
+		through protocols, services, and agent loops — sold as closed capability, documented as field
+		evidence.
 	</p>
 
 	<div class="grid">
 		<article class="panel card">
 			<h2>What this is</h2>
 			<p>
-				An owned settlement layer for notes, frameworks, and selective advisory — not a cold
-				landing page chasing ads. Discovery happens where operators already work; this site is
-				where trust and offers close.
+				A settlement layer for commercial drops and selective audits. Notes and
+				<a href="/llms.txt">llms.txt</a> earn peer and agent trust; the product is a compiled
+				black box or a written go / no-go — not another open tutorial mill.
 			</p>
 		</article>
 		<article class="panel card">
@@ -36,11 +43,12 @@
 			</p>
 		</article>
 		<article class="panel card">
-			<h2>Code</h2>
+			<h2>Front door vs backstage</h2>
 			<p>
-				Notes stay here. Experiments and board trees stay in
-				<a href={site.github} rel="noreferrer" target="_blank">GitHub</a>. A prompt or a probe
-				gets a repo when it is small enough to run without this site.
+				Buyers start at
+				<a href="/advisory">closed SDK / architecture audit</a>. Peers and agents read the
+				notes. Experiments that should stay public live on
+				<a href={site.github} rel="noreferrer" target="_blank">GitHub</a>.
 			</p>
 		</article>
 		<article class="panel card">

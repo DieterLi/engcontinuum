@@ -26,7 +26,6 @@
 		<link rel="alternate" type="text/plain" href="{site.url}/llms.txt" title="LLM guidance" />
 		<meta property="og:site_name" content={site.name} />
 		<meta property="og:url" content={canonicalHref} />
-		<meta name="twitter:card" content="summary" />
 		<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large" />
 		{@html siteGraphJsonLd()}
 	{/if}

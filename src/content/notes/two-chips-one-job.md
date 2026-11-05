@@ -7,9 +7,12 @@ tags:
   - architecture
   - devices
 keywords:
+  - edge AI architecture MCU media SoC
+  - agentic AI on battery cameras
   - low-power MCU and media SoC split
   - battery camera always-on control plane
   - wildlife camera power architecture
+  - hardware to LLM continuum
 faqs:
   - question: Why split a low-power MCU from a media SoC on a battery camera?
     answer: A media SoC that stays awake for control traffic burns the battery on cheap work. Keep wake, credentials, and session control on an always-on MCU, and power the media SoC only when there is something worth recording.

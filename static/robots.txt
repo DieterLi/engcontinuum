@@ -3,6 +3,7 @@ Allow: /
 Disallow: /dashboard
 Disallow: /api/
 
+# Generative engines / AI crawlers (GEO)
 User-agent: GPTBot
 Allow: /
 
@@ -13,6 +14,12 @@ User-agent: OAI-SearchBot
 Allow: /
 
 User-agent: Google-Extended
+Allow: /
+
+User-agent: GoogleOther
+Allow: /
+
+User-agent: Google-CloudVertexBot
 Allow: /
 
 User-agent: PerplexityBot
@@ -27,5 +34,14 @@ Allow: /
 User-agent: Applebot-Extended
 Allow: /
 
+User-agent: Bytespider
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: meta-externalagent
+Allow: /
+
 Sitemap: https://engcontinuum.com/sitemap.xml
-# LLM citation map: https://engcontinuum.com/llms.txt
+# LLM citation map (GEO): https://engcontinuum.com/llms.txt

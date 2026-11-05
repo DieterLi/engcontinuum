@@ -1,6 +1,6 @@
 ---
 title: OntoOS locally — ontology, prefix KV, and a sandbox walk
-summary: Why a Palantir-shaped ontology graph drops Cypher for prefix seeks and TPFRole bitmaps — and what this machine measured after the RocksDB C++ toolchain was missing.
+summary: Palantir-shaped ontology, TPFRole bitmaps, and a causal sandbox — with RocksDB embedded in a local Docker Linux image when the Windows host has no cmake.
 date: 2026-11-05
 category: notes
 tags:
@@ -11,6 +11,7 @@ keywords:
   - Palantir ontology object graph local PoC
   - OntoOS AbutionGraph TPFRole semantic layer
   - Ontology TPFRole HOLAP Roaring bitmap filter
+  - RocksDB Docker Compose prefix iterator
   - RocksDB prefix iterator out-edge encoding
   - copy-on-write sandbox causal propagation agent
 faqs:
@@ -18,15 +19,15 @@ faqs:
     answer: Objects and links share one entity-id space. TPFRole collapses ERP rows, time buckets, and spatial cells onto that space. Filters are Roaring intersections; walks are prefix scans on out-edges — not Cypher text plans.
   - question: What is TPFRole in this stack?
     answer: Six facets — Type, Predicate, Function, Aggregation, Action, Role — that name how a heterogeneous feed becomes bitmap keys and agent context. The local role for the check was Supplier / status:active / time:today / ops.
-  - question: Why is the durable store not RocksDB on this machine?
-    answer: rocksdb-sys needs cmake and a C++ toolchain. Neither cmake nor clang was on PATH. The PoC keeps the RocksDB key layout (v:{id}, e:out:{src}:{ty}:{dst}) on a sorted PrefixKv with the same scan contract.
+  - question: How do you run RocksDB on a Windows host without cmake?
+    answer: RocksDB is embedded in the backend, not a separate network service. docker compose builds a Linux image with --features rocksdb (cmake/clang inside the builder), mounts volume rocksdb-data at /data/rocksdb, and publishes 18080. The host cargo build keeps the BTree PrefixKv with the same key layout.
   - question: What did the sandbox shock walk and agent return?
     answer: Open walk 1001→2002→3003→4004 ended at 0.544. Isolating plant 2002 stopped the path at 0.850. With no ONTO_LLM_API_KEY, the agent emitted a local-policy re_route_supplier JSON for replay inside the overlay.
 ---
 
 General graph databases pay for a text query language and a distributed transaction story. A local OntoOS / AbutionGraph core does not. It needs a Palantir-shaped **ontology** — objects and links with a shared id space — a way to fold ERP, time-series, and spatial feeds into that space (**TPFRole**), a CoW sandbox that forks in well under a millisecond, and a causal walk that an agent can read before anything is promoted.
 
-This note is the second pass on that core. The first pass proved columns, bitmaps, and an in-memory overlay. This pass hardens the **key layout**, the **semantic layer**, the **HTTP + SvelteKit loop**, and the **agent hook**, and records what linked on this Windows box when RocksDB’s native build could not.
+This note is the second pass on that core. The first pass proved columns, bitmaps, and an in-memory overlay. This pass hardens the **key layout**, the **semantic layer**, the **HTTP + SvelteKit loop**, and the **agent hook**. The Windows host still cannot link `rocksdb-sys` without cmake; **Docker Desktop** builds the real RocksDB engine in Linux and mounts a durable volume.
 
 ---
 
@@ -85,18 +86,12 @@ geohash/H3 ──► geohash:… / spatial:… ─┘
 
 ```text
 ontopo-poc/
-├── backend/                 # Rust core (this pass)
-│   ├── Cargo.toml
-│   └── src/
-│       ├── main.rs          # Axum on 127.0.0.1:18080
-│       ├── storage.rs       # PrefixKv — RocksDB key layout
-│       ├── index.rs         # RoaringTreemap HOLAP
-│       ├── ontology.rs      # TPFRole + heterogeneous ingest
-│       ├── sandbox.rs       # CoW overlay
-│       ├── causal.rs        # Rayon frontier walk
-│       └── agent.rs         # local policy / OpenAI-compatible LLM
+├── docker-compose.yml       # RocksDB-backed backend + volume
+├── backend/
+│   ├── Dockerfile           # Linux build --features rocksdb
+│   ├── Cargo.toml           # optional dep rocksdb
+│   └── src/storage.rs       # BTree host | RocksDB in Docker
 └── frontend/                # SvelteKit sandbox console
-    └── src/routes/+page.svelte
 ```
 
 Resolved crates on rustc 1.99.1 (Windows):
@@ -112,7 +107,7 @@ Resolved crates on rustc 1.99.1 (Windows):
 
 `roaring` still has **no** `Roaring64Bitmap` root export — the u64 type is `RoaringTreemap`. Blueprint snippets that name `Roaring64Bitmap` need that rename on 0.11.
 
-Production path for storage remains RocksDB (`e:out:…` keys, `prefix_iterator`). This pass documents the gap instead of pretending the C++ crate linked.
+Storage is feature-gated: host `cargo build` → BTree `PrefixKv`; Docker `--features rocksdb` → embedded RocksDB with the same `e:out:…` keys and `prefix_iterator` neighbor fan-out. RocksDB is **not** a sidecar TCP service — it lives in-process inside the backend container.
 
 ---
 
@@ -213,13 +208,45 @@ cd frontend && npm install && npm run dev
 
 The page posts to the four routes: HOLAP sample, optional isolate of plant 2002, shock walk, agent panel. It is a thin client over the Rust process — the ontology and the walk stay in-process.
 
+### 3.6 RocksDB on Docker Desktop
+
+RocksDB needs cmake + a C++ toolchain. Those are missing on the Windows PATH; they are present in the Linux builder image. From the monorepo root:
+
+```bash
+docker compose up --build -d
+```
+
+That builds `ontopo-backend:rocksdb` with `--features rocksdb`, mounts named volume `rocksdb-data` at `/data`, sets `ONTO_DATA_DIR=/data/rocksdb`, binds `0.0.0.0:18080`, and health-checks `GET /health`.
+
+Container self-check from this run:
+
+```text
+store rocksdb kv_entries 7
+tpfrole_keys type:Supplier,status:active,time:today,role:ops,fn:name
+holap status∩time∩geohash = 1254
+bitmap mean 5.05 µs over 1000 intersections
+prefix e:out:1001: mean 0.53 µs over 1000 scans (1 edge)
+sandbox fork 0.028 µs
+sandbox base status[2002]=active overlay=isolated
+propagate open 1001:1.000 2002:0.850 3003:0.680 4004:0.544
+propagate isolated-2002 1001:1.000 2002:0.850
+Rust backend listening on http://0.0.0.0:18080
+```
+
+Host curl against the published port returned the same HOLAP count and open-path impacts as the BTree build. Prefix scan mean moved from **0.24 µs** (in-process BTree) to **0.53 µs** (RocksDB `prefix_iterator` in the container) on this fixture — still sub-microsecond for a single out-edge. The volume keeps the LSM files across `compose down` / `up`.
+
+```bash
+docker compose run --rm backend ontopo-backend --check
+curl http://127.0.0.1:18080/health
+```
+
 ---
 
 ## 4. What this pass is not
 
 - Not a Cypher engine and not a multi-region ACID graph.
-- Not a linked `rocksdb` crate on this laptop — key layout only, until cmake/clang are present.
+- Not a standalone RocksDB server image — the engine is embedded in the backend process; Docker only supplies the Linux build and the data volume.
 - Not a full Palantir Foundry substitute. The word **ontology** here means the object/link id space and TPFRole facets, not a commercial platform claim.
 - Not automatic promote-to-production. The agent suggestion is advice inside the sandbox.
 
-The durable next step is the same API over a real RocksDB open, then richer Action replay (apply tool call → second walk → diff). The numbers above are the acceptance gate for this local build.
+Next: richer Action replay (apply tool call → second walk → diff) on the same RocksDB volume. The Docker numbers above are the acceptance gate for the durable store.

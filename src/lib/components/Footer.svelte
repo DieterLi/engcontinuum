@@ -7,11 +7,13 @@
 		<div>
 			<p class="brand">{site.name}</p>
 			<p class="copy">{site.tagline}</p>
+			<p class="copy soft">Notes and llms.txt are evidence. The offer is closed delivery.</p>
 		</div>
 		<div class="links">
+			<a href={site.engageMailto}>Get SDK / audit</a>
+			<a href="/advisory">Advisory</a>
 			<a href="/notes">Notes</a>
 			<a href="/studio">Studio</a>
-			<a href="/advisory">Advisory</a>
 			<a href={site.github} rel="noreferrer" target="_blank">GitHub</a>
 			<a href="/llms.txt">llms.txt</a>
 		</div>
@@ -45,6 +47,10 @@
 		color: var(--ink-faint);
 		font-size: 0.95rem;
 		max-width: 28rem;
+	}
+
+	.copy.soft {
+		font-size: 0.85rem;
 	}
 
 	.links {

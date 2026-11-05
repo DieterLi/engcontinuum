@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { site } from '$lib/site';
+
 	let { path = '' }: { path?: string } = $props();
 
 	const links = [
@@ -23,6 +25,7 @@
 					{link.label}
 				</a>
 			{/each}
+			<a class="engage" href={site.engageMailto}>Get SDK / audit</a>
 		</nav>
 	</div>
 </header>
@@ -79,6 +82,7 @@
 		gap: 0.25rem;
 		flex-wrap: wrap;
 		justify-content: flex-end;
+		align-items: center;
 	}
 
 	.nav a {
@@ -96,5 +100,17 @@
 	.nav a.active {
 		color: var(--ink);
 		background: var(--accent-soft);
+	}
+
+	.nav a.engage {
+		margin-left: 0.35rem;
+		background: var(--accent);
+		color: var(--accent-ink);
+		font-weight: 500;
+	}
+
+	.nav a.engage:hover {
+		background: #e09a58;
+		color: var(--accent-ink);
 	}
 </style>
